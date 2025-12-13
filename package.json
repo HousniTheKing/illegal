@@ -1,9 +1,10 @@
 {
   "name": "illegal-store-theme",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "Static HTML/JS implementation of Illegal Store Theme",
   "scripts": {
-    "deploy": "wrangler pages deploy . --project-name illegal-store"
+    "build": "echo 'Building static assets...'",
+    "deploy": "if [ -n \"$CF_PAGES\" ]; then echo 'Running inside Cloudflare Pages - Skipping manual deploy step'; else wrangler pages deploy . --project-name illegal-store; fi"
   },
   "devDependencies": {
     "wrangler": "^3.0.0"
