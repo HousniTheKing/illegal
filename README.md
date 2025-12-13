@@ -1,11 +1,24 @@
-<div align="center">
+# Illegal Store Theme
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+A deep-web aesthetic landing page.
 
-  <h1>Built with AI Studio</h2>
+## Kifach tlo7 site f Cloudflare (Deployment)
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+Hit had site **Static** (HTML 100%), 3ndk 2 toror9:
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+### Tari9a 1: Drag & Drop (Sahla)
+1. Sir l dossier dyal lmechro3.
+2. **MSSA7** les fichiers `.tsx` o `.ts` kamlin (`App.tsx`, `index.tsx`, `types.ts`, etc).
+3. Khlli ghir `index.html`.
+4. Hzz dossier o lo7o f **Cloudflare Dashboard > Pages**.
 
-</div>
+### Tari9a 2: Wrangler (Terminal)
+1. Dir install l dependencies:
+   ```bash
+   npm install
+   ```
+2. Lancer deploy:
+   ```bash
+   npm run deploy
+   ```
+   (Ola b lcommande direct: `npx wrangler pages deploy .`)

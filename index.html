@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ILLEGAL STORE - Underground Market</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=vt323&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'hacker-green': '#0f0',
+              'hacker-dark': '#0a0a0a',
+              'hacker-red': '#ff0033',
+              'hacker-gray': '#1a1a1a',
+            },
+            fontFamily: {
+              mono: ['"Share Tech Mono"', 'monospace'],
+              pixel: ['"VT323"', 'monospace'],
+            },
+            animation: {
+              'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'glitch': 'glitch 1s linear infinite',
+              'fadeIn': 'fadeIn 0.5s ease-in-out forwards',
+            },
+            keyframes: {
+              glitch: {
+                '2%, 64%': { transform: 'translate(2px,0) skew(0deg)' },
+                '4%, 60%': { transform: 'translate(-2px,0) skew(0deg)' },
+                '62%': { transform: 'translate(0,0) skew(5deg)' },
+              },
+              fadeIn: {
+                '0%': { opacity: '0', transform: 'translateY(10px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
+              }
+            }
+          },
+        },
+      }
+    </script>
+    <style>
+      body {
+        background-color: #000;
+        color: #0f0;
+        overflow-x: hidden;
+      }
+      ::-webkit-scrollbar { width: 10px; }
+      ::-webkit-scrollbar-track { background: #000; }
+      ::-webkit-scrollbar-thumb { background: #0f0; border: 1px solid #000; }
+      ::-webkit-scrollbar-thumb:hover { background: #0a0; }
+      .crt::before {
+        content: " ";
+        display: block;
+        position: absolute;
+        top: 0; left: 0; bottom: 0; right: 0;
+        background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+        z-index: 50;
+        background-size: 100% 2px, 3px 100%;
+        pointer-events: none;
+      }
+      .glitch-text {
+        position: relative;
+      }
+      .glitch-text::before, .glitch-text::after {
+        content: attr(data-text);
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+      }
+      .glitch-text::before {
+        left: 2px;
+        text-shadow: -1px 0 #ff00c1;
+        clip: rect(44px, 450px, 56px, 0);
+        animation: glitch-anim 5s infinite linear alternate-reverse;
+      }
+      .glitch-text::after {
+        left: -2px;
+        text-shadow: -1px 0 #00fff9;
+        clip: rect(44px, 450px, 56px, 0);
+        animation: glitch-anim2 5s infinite linear alternate-reverse;
+      }
+      /* Animation keyframes for glitch effect */
+      @keyframes glitch-anim {
+        0% { clip: rect(10px, 9999px, 80px, 0); }
+        20% { clip: rect(40px, 9999px, 10px, 0); }
+        40% { clip: rect(80px, 9999px, 90px, 0); }
+        60% { clip: rect(20px, 9999px, 60px, 0); }
+        80% { clip: rect(50px, 9999px, 30px, 0); }
+        100% { clip: rect(90px, 9999px, 20px, 0); }
+      }
+      @keyframes glitch-anim2 {
+        0% { clip: rect(80px, 9999px, 10px, 0); }
+        20% { clip: rect(10px, 9999px, 90px, 0); }
+        40% { clip: rect(50px, 9999px, 20px, 0); }
+        60% { clip: rect(90px, 9999px, 60px, 0); }
+        80% { clip: rect(30px, 9999px, 10px, 0); }
+        100% { clip: rect(60px, 9999px, 50px, 0); }
+      }
+    </style>
+</head>
+  <body>
+    <div id="root"></div>
+
+    <script type="text/babel" data-type="module">
+      import React, { useState, useEffect, useRef } from 'https://esm.sh/react@18.2.0';
+      import { createRoot } from 'https://esm.sh/react-dom@18.2.0/client';
+      import { Terminal, Shield, Lock, Activity, EyeOff, Radio, ArrowLeft, Bitcoin, Upload, CheckCircle, Copy, ScanLine, ShieldAlert, Cpu, FileDigit, Eye } from 'https://esm.sh/lucide-react@0.300.0';
+
+      // --- CONFIG ---
+      const WALLET_BTC = "12UHsB3gPLkSvyCzDpp2sBPNQeaMggtPVM";
+      const WALLET_USDT = "0x7c96ba14401ee4ff62230d1658ca4f1169ea4355"; // ERC20
+
+      // --- DATA ---
+      const MOCK_DATA = [
+        // Apps
+        { 
+          id: 'tool_crax',
+          name: 'CraxRat V7.4 Enterprise', 
+          description: 'Enterprise-grade Android Remote Administration Tool tailored for absolute stealth. Features polymorphic FUD payload generation to bypass Play Protect, live HVNC (Hidden VNC) for invisible screen interaction, and real-time file management. V7.4 introduces enhanced persistence modules and encrypted C2 communication protocols for undetectable operation.', 
+          size: '185 MB', 
+          price: '$15.00', 
+          type: 'APP', 
+          downloads: 2420, 
+          riskLevel: 'CRITICAL',
+          image: 'https://i.ibb.co/zym1d3S/1754496069047.png'
+        },
+        { 
+          id: 'tool_scanner',
+          name: 'NetBreach Scanner', 
+          description: 'Advanced port scanner and vulnerability assessor for local networks.', 
+          size: '34 MB', 
+          price: '$45.00', 
+          type: 'APP', 
+          downloads: 890, 
+          riskLevel: 'HIGH' 
+        },
+        { 
+          id: 'tool_cleaner',
+          name: 'TraceWipe Pro', 
+          description: 'Completely remove digital footprints from Windows/Linux logs.', 
+          size: '12 MB', 
+          price: '$20.00', 
+          type: 'APP', 
+          downloads: 5600, 
+          riskLevel: 'LOW' 
+        },
+        { 
+          id: 'tool_bot',
+          name: 'CryptoSniper Bot', 
+          description: 'Automated trading script for DEX platforms. 50ms reaction time.', 
+          size: '8.5 MB', 
+          price: '$120.00', 
+          type: 'APP', 
+          downloads: 120, 
+          riskLevel: 'MEDIUM' 
+        },
+        
+        // Files
+        { 
+          id: 'file_discord',
+          name: 'Discord 2013 (OG)', 
+          description: 'Rare legacy account created in 2013. Includes full access to the Original Email (OGE). These accounts carry the highest trust factor in the ecosystem, ensuring immunity to most anti-spam filters and captcha verifications. Clean history, no phone linked, and perfect for high-profile server administration or social engineering operations.', 
+          size: 'ACC', 
+          price: '$70.00', 
+          type: 'FILE', 
+          downloads: 15, 
+          riskLevel: 'LOW',
+          image: 'https://i.ibb.co/chDBwc8v/discord.png'
+        },
+        { 
+          id: 'file_vpn',
+          name: 'Ghost VPN Lifetime', 
+          description: 'Premium account details for top-tier no-log VPN service.', 
+          size: 'ACCESS', 
+          price: '$12.00', 
+          type: 'FILE', 
+          downloads: 3200, 
+          riskLevel: 'LOW' 
+        },
+        { 
+          id: 'file_stream',
+          name: 'StreamMaster 4K', 
+          description: 'Access to global channels. Sports, Cinema, 18+. 1 Year.', 
+          size: 'ACCESS', 
+          price: '$25.00', 
+          type: 'FILE', 
+          downloads: 800, 
+          riskLevel: 'LOW' 
+        },
+        { 
+          id: 'file_db',
+          name: 'ComboList HQ 100K', 
+          description: 'High quality gaming email:pass combo list. Checked recently.', 
+          size: '45 MB', 
+          price: '$30.00', 
+          type: 'FILE', 
+          downloads: 150, 
+          riskLevel: 'MEDIUM' 
+        }
+      ];
+
+      // --- COMPONENTS ---
+
+      const MatrixRain = () => {
+        const canvasRef = useRef(null);
+
+        useEffect(() => {
+          const canvas = canvasRef.current;
+          if (!canvas) return;
+
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return;
+
+          let width = (canvas.width = window.innerWidth);
+          let height = (canvas.height = window.innerHeight);
+          
+          const str = '01日ｦｱｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ';
+          const matrix = str.split('');
+          const fontSize = 14;
+          const columns = width / fontSize;
+          const drops = [];
+          for (let x = 0; x < columns; x++) drops[x] = 1;
+
+          const draw = () => {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, width, height);
+            ctx.fillStyle = '#0F0';
+            ctx.font = `${fontSize}px monospace`;
+            
+            for (let i = 0; i < drops.length; i++) {
+              const text = matrix[Math.floor(Math.random() * matrix.length)];
+              ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+              if (drops[i] * fontSize > height && Math.random() > 0.975) drops[i] = 0;
+              drops[i]++;
+            }
+          };
+
+          const interval = setInterval(draw, 33);
+          const handleResize = () => {
+              width = canvas.width = window.innerWidth;
+              height = canvas.height = window.innerHeight;
+          };
+          window.addEventListener('resize', handleResize);
+          return () => {
+            clearInterval(interval);
+            window.removeEventListener('resize', handleResize);
+          };
+        }, []);
+
+        return (
+          <canvas ref={canvasRef} className="fixed top-0 left-0 w-full h-full z-0 opacity-40 pointer-events-none" />
+        );
+      };
+
+      const StoreCard = ({ item, onClick }) => {
+        const isCritical = item.riskLevel === 'CRITICAL' || item.riskLevel === 'HIGH';
+        
+        return (
+          <div 
+            onClick={() => onClick(item)}
+            className={`
+            cursor-pointer
+            relative group border border-hacker-green/30 bg-black/80 
+            hover:border-hacker-green hover:shadow-[0_0_15px_rgba(0,255,0,0.3)] 
+            transition-all duration-300 backdrop-blur-sm overflow-hidden flex flex-col
+            ${isCritical ? 'hover:border-hacker-red hover:shadow-[0_0_15px_rgba(255,0,51,0.3)]' : ''}
+          `}>
+            <div className="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-hacker-green group-hover:w-full group-hover:h-full transition-all duration-500 opacity-50 pointer-events-none z-20"></div>
+            <div className="absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-hacker-green group-hover:w-full group-hover:h-full transition-all duration-500 opacity-50 pointer-events-none z-20"></div>
+
+            <div className="h-40 w-full bg-black/50 border-b border-hacker-green/20 relative group-hover:border-hacker-green/50 transition-colors shrink-0">
+               {item.image ? (
+                 <img 
+                   src={item.image} 
+                   alt={item.name} 
+                   className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500" 
+                 />
+               ) : (
+                 <div className="w-full h-full flex items-center justify-center bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
+                   {item.type === 'APP' ? (
+                     <Cpu size={64} className="text-hacker-green opacity-20 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300" />
+                   ) : (
+                     <FileDigit size={64} className="text-blue-500 opacity-20 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300" />
+                   )}
+                 </div>
+               )}
+               
+               <div className="absolute top-2 left-2 px-2 py-1 bg-black/80 border border-hacker-green/30 text-[10px] font-mono tracking-widest text-hacker-green">
+                  {item.type}
+               </div>
+
+               {isCritical && (
+                 <div className="absolute top-2 right-2 px-2 py-1 bg-hacker-red/20 border border-hacker-red text-[10px] font-mono tracking-widest text-hacker-red flex items-center gap-1 animate-pulse">
+                    <ShieldAlert size={12} /> RISK: {item.riskLevel}
+                 </div>
+               )}
+            </div>
+
+            <div className="p-4 flex flex-col flex-grow">
+              <h3 className={`text-xl font-bold font-mono truncate mb-2 ${isCritical ? 'text-hacker-red' : 'text-white'}`}>
+                {item.name}
+              </h3>
+              
+              <p className="text-gray-400 text-sm h-10 overflow-hidden mb-4 font-mono leading-tight line-clamp-2">
+                {item.description}
+              </p>
+
+              <div className="mt-auto">
+                <div className="grid grid-cols-2 gap-2 text-xs font-mono text-gray-500 mb-4 border-t border-gray-800 pt-2">
+                  <div>SIZE: <span className="text-hacker-green">{item.size}</span></div>
+                  <div>COST: <span className="text-yellow-500">{item.price}</span></div>
+                  <div>DLs: <span className="text-white">{item.downloads}</span></div>
+                  <div>ID: <span className="text-gray-600">#{item.id.split('_')[1] || item.id}</span></div>
+                </div>
+
+                <button 
+                  className={`
+                    w-full py-2 flex items-center justify-center gap-2 
+                    font-bold text-sm uppercase tracking-wider
+                    border 
+                    transition-all duration-200
+                    ${isCritical 
+                      ? 'border-hacker-red text-hacker-red hover:bg-hacker-red hover:text-black' 
+                      : 'border-hacker-green text-hacker-green hover:bg-hacker-green hover:text-black'}
+                  `}
+                >
+                  <Eye className="w-4 h-4" />
+                  <span>ACCESS PRODUCT</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      // --- INDIVIDUAL VIEW COMPONENTS (Defined OUTSIDE App to fix focus issues) ---
+
+      const HomeView = ({ items, activeTab, setActiveTab, openProduct }) => (
+        <div className="animate-fadeIn">
+          <header className="mb-8 text-center border-b-2 border-hacker-green/20 pb-8">
+            <div className="flex justify-center items-center gap-4 mb-4 animate-pulse">
+                <EyeOff size={48} className="text-hacker-red" />
+                <h1 className="text-5xl md:text-7xl font-bold tracking-tighter text-white glitch-text" data-text="ILLEGAL STORE" style={{ textShadow: '2px 2px 0px #ff0033, -2px -2px 0px #00ff00' }}>
+                  ILLEGAL STORE
+                </h1>
+                <Lock size={48} className="text-hacker-red" />
+            </div>
+            <p className="text-hacker-green/70 text-lg uppercase tracking-[0.5em] mb-2">
+              The Hidden Marketplace
+            </p>
+            <div className="flex justify-center items-center gap-6 text-xs text-gray-500">
+              <span className="flex items-center gap-1 text-green-500"><div className="w-2 h-2 bg-green-500 rounded-full animate-ping"/> STATUS: ONLINE</span>
+              <span className="flex items-center gap-1"><Radio size={12}/> ENCRYPTION: 256-BIT</span>
+              <span className="flex items-center gap-1"><Activity size={12}/> USERS: 4,021</span>
+            </div>
+          </header>
+
+          <div className="flex justify-center mb-12">
+            <div className="flex border border-hacker-green/50 bg-black/80 backdrop-blur-md p-1">
+              <button
+                onClick={() => setActiveTab('APP')}
+                className={`
+                  px-8 py-3 text-xl font-bold uppercase tracking-widest transition-all duration-300
+                  flex items-center gap-3
+                  ${activeTab === 'APP' 
+                    ? 'bg-hacker-green text-black shadow-[0_0_20px_rgba(0,255,0,0.4)]' 
+                    : 'text-hacker-green hover:bg-hacker-green/10'}
+                `}
+              >
+                <Terminal size={20} />
+                Applications
+              </button>
+              <button
+                onClick={() => setActiveTab('FILE')}
+                className={`
+                  px-8 py-3 text-xl font-bold uppercase tracking-widest transition-all duration-300
+                  flex items-center gap-3
+                  ${activeTab === 'FILE' 
+                    ? 'bg-blue-600 text-black shadow-[0_0_20px_rgba(37,99,235,0.4)]' 
+                    : 'text-blue-500 hover:bg-blue-600/10'}
+                `}
+              >
+                <Shield size={20} />
+                Files & Accounts
+              </button>
+            </div>
+          </div>
+
+          <main className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-20">
+            {items.map((item) => (
+              <StoreCard key={item.id} item={item} onClick={openProduct} />
+            ))}
+          </main>
+        </div>
+      );
+
+      const DetailView = ({ selectedItem, goHome, goToCheckout }) => (
+        <div className="animate-fadeIn">
+          <button onClick={goHome} className="flex items-center gap-2 text-hacker-green hover:text-white mb-6 border border-transparent hover:border-hacker-green px-4 py-2 transition-all">
+            <ArrowLeft size={16} /> RETURN TO MARKET
+          </button>
+          
+          <div className="bg-black/80 border border-hacker-green/40 p-1 backdrop-blur-md shadow-[0_0_30px_rgba(0,255,0,0.1)]">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 lg:gap-8">
+              <div className="relative border-b lg:border-b-0 lg:border-r border-hacker-green/30 bg-black">
+                 <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-10"></div>
+                 {selectedItem?.image ? (
+                   <img src={selectedItem.image} alt={selectedItem.name} className="w-full h-full object-cover opacity-90" />
+                 ) : (
+                   <div className="w-full h-96 flex items-center justify-center bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
+                      <Terminal size={100} className="text-hacker-green opacity-30" />
+                   </div>
+                 )}
+                 <div className="absolute bottom-4 left-4 z-20">
+                   <div className="text-hacker-green text-xs font-bold tracking-widest border border-hacker-green inline-block px-2 py-1 mb-2 bg-black/80">
+                     {selectedItem?.type}
+                   </div>
+                   <div className="text-hacker-red text-xs font-bold tracking-widest border border-hacker-red inline-block px-2 py-1 bg-black/80 ml-2 animate-pulse">
+                     RISK: {selectedItem?.riskLevel}
+                   </div>
+                 </div>
+              </div>
+
+              <div className="p-8 flex flex-col justify-between">
+                <div>
+                  <h1 className="text-3xl md:text-5xl font-bold text-white mb-2 font-mono glitch-text" data-text={selectedItem?.name}>
+                    {selectedItem?.name}
+                  </h1>
+                  <div className="w-20 h-1 bg-hacker-green mb-6"></div>
+                  
+                  <div className="space-y-4 mb-8 text-gray-400 font-mono text-lg leading-relaxed">
+                    <p>{selectedItem?.description}</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 mb-8 p-4 bg-hacker-green/5 border border-hacker-green/20">
+                    <div className="flex flex-col">
+                      <span className="text-xs text-gray-500 uppercase">File Size</span>
+                      <span className="text-hacker-green font-bold">{selectedItem?.size}</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-xs text-gray-500 uppercase">Version</span>
+                      <span className="text-hacker-green font-bold">LATEST (v2.0)</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-xs text-gray-500 uppercase">Downloads</span>
+                      <span className="text-white font-bold">{selectedItem?.downloads}</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-xs text-gray-500 uppercase">Support</span>
+                      <span className="text-white font-bold">24/7 ENCRYPTED</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between border-t border-gray-800 pt-6">
+                   <div className="text-3xl font-bold text-yellow-500 font-mono">
+                     {selectedItem?.price}
+                   </div>
+                   <button 
+                     onClick={goToCheckout}
+                     className="bg-hacker-green hover:bg-white text-black font-bold text-xl px-12 py-4 uppercase tracking-wider shadow-[0_0_15px_rgba(0,255,0,0.5)] hover:shadow-[0_0_25px_rgba(0,255,0,0.8)] transition-all transform hover:-translate-y-1"
+                   >
+                     BUY NOW
+                   </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+
+      const CheckoutView = ({ selectedItem, email, setEmail, insta, setInsta, file, setFile, completeOrder, copyToClipboard, setView }) => (
+        <div className="max-w-4xl mx-auto animate-fadeIn">
+          <button onClick={() => setView('DETAIL')} className="flex items-center gap-2 text-hacker-green hover:text-white mb-6">
+            <ArrowLeft size={16} /> BACK TO PRODUCT
+          </button>
+
+          <div className="bg-black/90 border border-hacker-green p-8 relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-hacker-green to-transparent animate-pulse"></div>
+            
+            <h2 className="text-3xl font-bold text-white mb-8 flex items-center gap-3">
+              <Lock className="text-hacker-red" /> SECURE CHECKOUT
+            </h2>
+
+            <div className="mb-8 p-4 bg-hacker-green/10 border border-hacker-green/30 flex justify-between items-center">
+               <div>
+                 <div className="text-xs text-gray-400">ITEM</div>
+                 <div className="text-xl font-bold text-white">{selectedItem?.name}</div>
+               </div>
+               <div>
+                 <div className="text-xs text-gray-400">TOTAL</div>
+                 <div className="text-2xl font-bold text-yellow-500">{selectedItem?.price}</div>
+               </div>
+            </div>
+
+            <div className="space-y-8 mb-8">
+               <h3 className="text-hacker-green uppercase tracking-widest border-b border-gray-800 pb-2">1. Scan & Pay</h3>
+               <p className="text-sm text-gray-400">Scan QR Code or copy address. Transfer exact amount.</p>
+               
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* BTC */}
+                  <div className="bg-gray-900/50 p-6 border border-gray-700 hover:border-yellow-500 transition-colors group flex flex-col items-center text-center">
+                     <div className="mb-4 bg-white p-2 rounded">
+                       <img 
+                         src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${WALLET_BTC}`} 
+                         alt="BTC QR" 
+                         className="w-32 h-32"
+                       />
+                     </div>
+                     <div className="flex items-center gap-2 font-bold text-yellow-500 mb-2">
+                       <Bitcoin size={20}/> BITCOIN (BTC)
+                     </div>
+                     <code className="text-[10px] font-mono text-gray-400 bg-black p-2 rounded w-full break-all mb-2 border border-gray-800">
+                       {WALLET_BTC}
+                     </code>
+                     <button 
+                       onClick={() => copyToClipboard(WALLET_BTC, 'BTC')}
+                       className="flex items-center gap-2 text-xs text-white hover:text-yellow-500 transition-colors"
+                     >
+                       <Copy size={12}/> COPY ADDRESS
+                     </button>
+                  </div>
+
+                  {/* USDT */}
+                  <div className="bg-gray-900/50 p-6 border border-gray-700 hover:border-green-500 transition-colors group flex flex-col items-center text-center">
+                     <div className="mb-4 bg-white p-2 rounded">
+                       <img 
+                         src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${WALLET_USDT}`} 
+                         alt="USDT QR" 
+                         className="w-32 h-32"
+                       />
+                     </div>
+                     <div className="flex items-center gap-2 font-bold text-green-500 mb-2">
+                       <ScanLine size={20}/> USDT (ERC20)
+                     </div>
+                     <code className="text-[10px] font-mono text-gray-400 bg-black p-2 rounded w-full break-all mb-2 border border-gray-800">
+                       {WALLET_USDT}
+                     </code>
+                     <button 
+                       onClick={() => copyToClipboard(WALLET_USDT, 'USDT')}
+                       className="flex items-center gap-2 text-xs text-white hover:text-green-500 transition-colors"
+                     >
+                       <Copy size={12}/> COPY ADDRESS
+                     </button>
+                  </div>
+               </div>
+            </div>
+
+            <form onSubmit={completeOrder} className="space-y-6">
+               <h3 className="text-hacker-green uppercase tracking-widest border-b border-gray-800 pb-2">2. Verify Identity</h3>
+               
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                 <div className="relative z-0">
+                   <label className="block text-xs text-gray-500 mb-1">YOUR EMAIL (FOR DELIVERY)</label>
+                   <input 
+                     type="email" 
+                     required
+                     value={email}
+                     onChange={(e) => setEmail(e.target.value)}
+                     className="w-full bg-black border border-gray-700 focus:border-hacker-green text-white p-3 outline-none transition-colors font-mono relative z-10"
+                     placeholder="ghost@protonmail.com"
+                   />
+                 </div>
+                 <div className="relative z-0">
+                   <label className="block text-xs text-gray-500 mb-1">INSTAGRAM / TELEGRAM USER</label>
+                   <input 
+                     type="text" 
+                     required
+                     value={insta}
+                     onChange={(e) => setInsta(e.target.value)}
+                     className="w-full bg-black border border-gray-700 focus:border-hacker-green text-white p-3 outline-none transition-colors font-mono relative z-10"
+                     placeholder="@username"
+                   />
+                 </div>
+               </div>
+
+               <div>
+                 <label className="block text-xs text-gray-500 mb-1">UPLOAD PAYMENT PROOF (SCREENSHOT)</label>
+                 <div className="relative border-2 border-dashed border-gray-800 hover:border-hacker-green transition-colors p-8 text-center bg-black/50 group">
+                   <input 
+                     type="file" 
+                     required
+                     onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)}
+                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+                   />
+                   <Upload className="mx-auto text-gray-600 mb-2 group-hover:text-hacker-green transition-colors" />
+                   <span className="text-gray-400 text-sm group-hover:text-white transition-colors">{file ? file.name : "DRAG & DROP OR CLICK TO UPLOAD"}</span>
+                 </div>
+               </div>
+
+               <button 
+                 type="submit"
+                 className="w-full bg-hacker-red hover:bg-red-600 text-white font-bold py-4 mt-8 uppercase tracking-widest shadow-[0_0_20px_rgba(255,0,0,0.3)] hover:shadow-[0_0_30px_rgba(255,0,0,0.6)] transition-all"
+               >
+                 CONFIRM PURCHASE
+               </button>
+            </form>
+          </div>
+        </div>
+      );
+
+      const SuccessView = ({ goHome }) => (
+        <div className="flex items-center justify-center min-h-[60vh] animate-fadeIn">
+          <div className="text-center max-w-lg bg-black/90 border border-hacker-green p-12 shadow-[0_0_50px_rgba(0,255,0,0.2)]">
+            <div className="flex justify-center mb-6">
+              <div className="relative">
+                <div className="absolute inset-0 bg-green-500 blur-xl opacity-50 animate-pulse"></div>
+                <CheckCircle size={80} className="text-hacker-green relative z-10" />
+              </div>
+            </div>
+            
+            <h2 className="text-4xl font-bold text-white mb-4 glitch-text" data-text="ORDER RECEIVED">ORDER RECEIVED</h2>
+            <p className="text-gray-400 font-mono mb-8 leading-relaxed">
+              We are currently verifying the blockchain transaction on the network.
+              <br/><br/>
+              <span className="text-hacker-green">ESTIMATED TIME: &lt; 24 HOURS</span>
+              <br/>
+              Once confirmed, you will receive the download link and private key via the email provided.
+            </p>
+            
+            <button 
+              onClick={goHome}
+              className="border border-hacker-green text-hacker-green hover:bg-hacker-green hover:text-black px-8 py-3 uppercase tracking-widest transition-all font-bold"
+            >
+              RETURN TO STORE
+            </button>
+          </div>
+        </div>
+      );
+
+      // --- MAIN APP ---
+
+      const App = () => {
+        const [view, setView] = useState('HOME');
+        const [activeTab, setActiveTab] = useState('APP');
+        const [items, setItems] = useState([]);
+        const [selectedItem, setSelectedItem] = useState(null);
+        
+        // Checkout Form State
+        const [email, setEmail] = useState('');
+        const [insta, setInsta] = useState('');
+        const [file, setFile] = useState(null);
+
+        useEffect(() => {
+          setItems(MOCK_DATA.filter(item => item.type === activeTab));
+        }, [activeTab]);
+
+        const openProduct = (item) => {
+          setSelectedItem(item);
+          setView('DETAIL');
+          window.scrollTo(0, 0);
+        };
+
+        const goHome = () => {
+          setView('HOME');
+          setSelectedItem(null);
+          setEmail('');
+          setInsta('');
+          setFile(null);
+          window.scrollTo(0, 0);
+        };
+
+        const goToCheckout = () => {
+          setView('CHECKOUT');
+          window.scrollTo(0, 0);
+        };
+
+        const completeOrder = (e) => {
+          e.preventDefault();
+          if(!email || !insta || !file) {
+            alert("ERROR: MISSING REQUIRED DATA FIELDS.");
+            return;
+          }
+          setView('SUCCESS');
+          window.scrollTo(0, 0);
+        };
+
+        const copyToClipboard = (text, type) => {
+          navigator.clipboard.writeText(text);
+          alert(`${type} Address Copied to Clipboard`);
+        };
+
+        return (
+          <div className="relative min-h-screen text-hacker-green font-mono crt selection:bg-hacker-red selection:text-white">
+            <MatrixRain />
+            <div className="relative z-10 max-w-6xl mx-auto px-4 py-8">
+              {view === 'HOME' && (
+                <HomeView 
+                  items={items} 
+                  activeTab={activeTab} 
+                  setActiveTab={setActiveTab} 
+                  openProduct={openProduct} 
+                />
+              )}
+              {view === 'DETAIL' && (
+                <DetailView 
+                  selectedItem={selectedItem} 
+                  goHome={goHome} 
+                  goToCheckout={goToCheckout} 
+                />
+              )}
+              {view === 'CHECKOUT' && (
+                <CheckoutView 
+                  selectedItem={selectedItem}
+                  email={email}
+                  setEmail={setEmail}
+                  insta={insta}
+                  setInsta={setInsta}
+                  file={file}
+                  setFile={setFile}
+                  completeOrder={completeOrder}
+                  copyToClipboard={copyToClipboard}
+                  setView={setView}
+                />
+              )}
+              {view === 'SUCCESS' && (
+                <SuccessView goHome={goHome} />
+              )}
+              
+              <footer className="text-center text-gray-600 text-xs border-t border-gray-900 pt-8 pb-4 font-mono mt-12">
+                <p className="mb-2">ANONYMOUS ACCESS ONLY. IP LOGGING DISABLED.</p>
+                <p className="text-gray-800">
+                  DISCLAIMER: This is a website theme ("Illegal Store") for design purposes only. 
+                  No actual illegal content is hosted here. All files are simulated.
+                </p>
+                <p className="mt-4">
+                  <span className="text-hacker-red">ERROR 404:</span> SYSTEM IDENTIFICATION FAILED
+                </p>
+              </footer>
+            </div>
+          </div>
+        );
+      };
+
+      const root = createRoot(document.getElementById('root'));
+      root.render(<App />);
+    </script>
+  </body>
+</html>

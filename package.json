@@ -1,0 +1,11 @@
+{
+  "name": "illegal-store-theme",
+  "version": "1.0.0",
+  "description": "Static HTML/JS implementation of Illegal Store Theme",
+  "scripts": {
+    "deploy": "wrangler pages deploy ."
+  },
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}
