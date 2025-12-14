@@ -25,6 +25,7 @@
               'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
               'glitch': 'glitch 1s linear infinite',
               'fadeIn': 'fadeIn 0.5s ease-in-out forwards',
+              'scan': 'scan 2s linear infinite',
             },
             keyframes: {
               glitch: {
@@ -35,6 +36,10 @@
               fadeIn: {
                 '0%': { opacity: '0', transform: 'translateY(10px)' },
                 '100%': { opacity: '1', transform: 'translateY(0)' },
+              },
+              scan: {
+                '0%': { top: '0%' },
+                '100%': { top: '100%' },
               }
             }
           },
@@ -46,6 +51,8 @@
         background-color: #000;
         color: #0f0;
         overflow-x: hidden;
+        user-select: none; /* Prevent text selection */
+        -webkit-user-select: none;
       }
       ::-webkit-scrollbar { width: 10px; }
       ::-webkit-scrollbar-track { background: #000; }
@@ -102,13 +109,13 @@
       }
     </style>
 </head>
-  <body>
+  <body oncontextmenu="return false;">
     <div id="root"></div>
 
     <script type="text/babel" data-type="module">
       import React, { useState, useEffect, useRef } from 'https://esm.sh/react@18.2.0';
       import { createRoot } from 'https://esm.sh/react-dom@18.2.0/client';
-      import { Terminal, Shield, Lock, Activity, EyeOff, Radio, ArrowLeft, Bitcoin, Upload, CheckCircle, Copy, ScanLine, ShieldAlert, Cpu, FileDigit, Eye, Image as ImageIcon } from 'https://esm.sh/lucide-react@0.300.0';
+      import { Terminal, Shield, Lock, Activity, EyeOff, Radio, ArrowLeft, Bitcoin, Upload, CheckCircle, Copy, ScanLine, ShieldAlert, Cpu, FileDigit, Eye, ShieldCheck } from 'https://esm.sh/lucide-react@0.300.0';
 
       // --- CONFIG ---
       const WALLET_BTC = "12UHsB3gPLkSvyCzDpp2sBPNQeaMggtPVM";
@@ -116,7 +123,59 @@
 
       // --- DATA ---
       const MOCK_DATA = [
-        // Apps
+        // --- NEW DEEP WEB TOOLS (Discounted) ---
+        { 
+          id: 'tool_pegasus',
+          name: 'Pegasus Spyware (Nirvana Ed.)', 
+          description: 'The legendary state-grade surveillance tool. Zero-click infection vector for iOS 17.x and Android 14. Full access to encrypted messages (Signal, WhatsApp), microphone, camera, and GPS history. This is the leaked "Nirvana" source code allowing for self-hosting C2. Extremely rare.', 
+          size: '8.4 GB', 
+          price: '$60.00', 
+          originalPrice: '$100.00',
+          discount: 40,
+          type: 'APP', 
+          downloads: 42, 
+          riskLevel: 'CRITICAL',
+          image: 'https://i.ibb.co/tTDGq47b/750x450-398020-pegasus-spyware.png'
+        },
+        { 
+          id: 'tool_cobalt',
+          name: 'Cobalt Strike 4.9 (Licensed)', 
+          description: 'The standard for advanced adversary simulation. This is not a cracked version; it is a stolen Licensed Team Server. Includes valid Malleable C2 profiles to mimic legitimate traffic (Amazon, Google, jQuery) and bypass EDR/XDR. Comes with Artifact Kit and Sleep Mask.', 
+          size: '480 MB', 
+          price: '$45.00', 
+          originalPrice: '$75.00',
+          discount: 40,
+          type: 'APP', 
+          downloads: 128, 
+          riskLevel: 'HIGH',
+          image: 'https://i.ibb.co/pvsF35Pf/Cobalt-Strike-4-9-Released-1.jpg'
+        },
+        { 
+          id: 'tool_exploit_kit',
+          name: 'Zero-Click Exploit Kit (0-day)', 
+          description: 'A collection of unpatched zero-day exploits targeting Chrome V8 Engine and Windows Kernel (Local Privilege Escalation). Includes the "SilentLink" builder which executes payload upon SMS receipt without user interaction. Highest success rate in the market.', 
+          size: '1.2 GB', 
+          price: '$30.00', 
+          originalPrice: '$50.00',
+          discount: 40,
+          type: 'APP', 
+          downloads: 15, 
+          riskLevel: 'CRITICAL',
+          image: 'https://i.ibb.co/HLLhdTK7/icon-what-is-zero-click-attack.jpg'
+        },
+
+        // --- EXISTING TOOLS ---
+        { 
+          id: 'tool_xworm',
+          name: 'X-Worm V6.0 Platinum', 
+          description: 'One of the most dangerous espionage tools returns with Version 6.0. Equipped with over 35 plugins, it executes surveillance and data theft on an unprecedented scale. Includes specialized modules: Stealer.dll & Chromium.dll (harvests Chrome, Telegram, Discord, MetaMask), RemoteDesktop.dll (HVNC), Webcam.dll (Spying), Ransomware.dll (Encryption/Extortion), and Rootkit.dll for absolute stealth. Developed by EvilCoder, this tool transforms any infected machine into a miniature cyber-army node.', 
+          size: '42 MB', 
+          price: '$18.00', 
+          type: 'APP', 
+          downloads: 1840, 
+          riskLevel: 'HIGH',
+          image: 'https://i.ibb.co/Ndszmwq8/xwo.png'
+        },
         { 
           id: 'tool_crax',
           name: 'CraxRat V7.4 Enterprise', 
@@ -128,38 +187,8 @@
           riskLevel: 'CRITICAL',
           image: 'https://i.ibb.co/zym1d3S/1754496069047.png'
         },
-        { 
-          id: 'tool_scanner',
-          name: 'NetBreach Scanner', 
-          description: 'Advanced port scanner and vulnerability assessor for local networks.', 
-          size: '34 MB', 
-          price: '$45.00', 
-          type: 'APP', 
-          downloads: 890, 
-          riskLevel: 'HIGH' 
-        },
-        { 
-          id: 'tool_cleaner',
-          name: 'TraceWipe Pro', 
-          description: 'Completely remove digital footprints from Windows/Linux logs.', 
-          size: '12 MB', 
-          price: '$20.00', 
-          type: 'APP', 
-          downloads: 5600, 
-          riskLevel: 'LOW' 
-        },
-        { 
-          id: 'tool_bot',
-          name: 'CryptoSniper Bot', 
-          description: 'Automated trading script for DEX platforms. 50ms reaction time.', 
-          size: '8.5 MB', 
-          price: '$120.00', 
-          type: 'APP', 
-          downloads: 120, 
-          riskLevel: 'MEDIUM' 
-        },
         
-        // Files
+        // Files (ONLY DISCORD)
         { 
           id: 'file_discord',
           name: 'Discord 2013 (OG)', 
@@ -167,39 +196,9 @@
           size: 'ACC', 
           price: '$70.00', 
           type: 'FILE', 
-          downloads: 15, 
+          downloads: 16, 
           riskLevel: 'LOW',
           image: 'https://i.ibb.co/chDBwc8v/discord.png'
-        },
-        { 
-          id: 'file_vpn',
-          name: 'Ghost VPN Lifetime', 
-          description: 'Premium account details for top-tier no-log VPN service.', 
-          size: 'ACCESS', 
-          price: '$12.00', 
-          type: 'FILE', 
-          downloads: 3200, 
-          riskLevel: 'LOW' 
-        },
-        { 
-          id: 'file_stream',
-          name: 'StreamMaster 4K', 
-          description: 'Access to global channels. Sports, Cinema, 18+. 1 Year.', 
-          size: 'ACCESS', 
-          price: '$25.00', 
-          type: 'FILE', 
-          downloads: 800, 
-          riskLevel: 'LOW' 
-        },
-        { 
-          id: 'file_db',
-          name: 'ComboList HQ 100K', 
-          description: 'High quality gaming email:pass combo list. Checked recently.', 
-          size: '45 MB', 
-          price: '$30.00', 
-          type: 'FILE', 
-          downloads: 150, 
-          riskLevel: 'MEDIUM' 
         }
       ];
 
@@ -256,8 +255,71 @@
         );
       };
 
+      const SecurityCheck = ({ onVerified }) => {
+        const [progress, setProgress] = useState(0);
+        const [status, setStatus] = useState("Initializing Security Protocols...");
+
+        useEffect(() => {
+          const steps = [
+            { p: 20, s: "Checking Browser Fingerprint..." },
+            { p: 45, s: "Verifying Anti-Bot Token..." },
+            { p: 70, s: "Establishing Encrypted Tunnel..." },
+            { p: 90, s: "Analyzing Network Traffic..." },
+            { p: 100, s: "Access Granted." }
+          ];
+
+          let currentStep = 0;
+
+          const interval = setInterval(() => {
+            if (currentStep >= steps.length) {
+               clearInterval(interval);
+               setTimeout(onVerified, 800);
+               return;
+            }
+            
+            const step = steps[currentStep];
+            setProgress(step.p);
+            setStatus(step.s);
+            currentStep++;
+          }, 800);
+
+          return () => clearInterval(interval);
+        }, [onVerified]);
+
+        return (
+           <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center font-mono text-hacker-green">
+              <div className="w-full max-w-md p-8 border border-hacker-green/30 bg-gray-900/50 relative overflow-hidden">
+                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-hacker-green to-transparent animate-scan opacity-50"></div>
+                 
+                 <div className="flex justify-center mb-8">
+                    <ShieldCheck size={64} className="animate-pulse" />
+                 </div>
+                 
+                 <h2 className="text-2xl font-bold text-center mb-2">DDoS PROTECTION</h2>
+                 <p className="text-center text-xs text-gray-500 mb-8">VERIFYING CONNECTION SECURITY</p>
+                 
+                 <div className="w-full h-2 bg-gray-800 border border-gray-700 mb-4 overflow-hidden">
+                    <div 
+                      className="h-full bg-hacker-green transition-all duration-500 ease-out"
+                      style={{ width: `${progress}%` }}
+                    ></div>
+                 </div>
+                 
+                 <div className="flex justify-between items-center text-xs">
+                    <span className="text-hacker-green animate-pulse">> {status}</span>
+                    <span className="text-gray-500">{progress}%</span>
+                 </div>
+              </div>
+              <div className="mt-4 text-[10px] text-gray-600">
+                 ID: {Math.random().toString(36).substr(2, 9).toUpperCase()}
+              </div>
+           </div>
+        );
+      };
+
       const StoreCard = ({ item, onClick }) => {
         const isCritical = item.riskLevel === 'CRITICAL' || item.riskLevel === 'HIGH';
+        const hasDiscount = item.discount && item.discount > 0;
         
         return (
           <div 
@@ -269,10 +331,12 @@
             transition-all duration-300 backdrop-blur-sm overflow-hidden flex flex-col
             ${isCritical ? 'hover:border-hacker-red hover:shadow-[0_0_15px_rgba(255,0,51,0.3)]' : ''}
           `}>
+            {/* CORNER ACCENTS */}
             <div className="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-hacker-green group-hover:w-full group-hover:h-full transition-all duration-500 opacity-50 pointer-events-none z-20"></div>
             <div className="absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-hacker-green group-hover:w-full group-hover:h-full transition-all duration-500 opacity-50 pointer-events-none z-20"></div>
 
-            <div className="h-40 w-full bg-black/50 border-b border-hacker-green/20 relative group-hover:border-hacker-green/50 transition-colors shrink-0">
+            {/* IMAGE SECTION */}
+            <div className="h-40 w-full bg-black/50 border-b border-hacker-green/20 relative group-hover:border-hacker-green/50 transition-colors shrink-0 overflow-hidden">
                {item.image ? (
                  <img 
                    src={item.image} 
@@ -289,17 +353,26 @@
                  </div>
                )}
                
-               <div className="absolute top-2 left-2 px-2 py-1 bg-black/80 border border-hacker-green/30 text-[10px] font-mono tracking-widest text-hacker-green">
+               {/* BADGES */}
+               <div className="absolute top-2 left-2 px-2 py-1 bg-black/80 border border-hacker-green/30 text-[10px] font-mono tracking-widest text-hacker-green z-20">
                   {item.type}
                </div>
 
+               {hasDiscount && (
+                 <div className="absolute top-2 right-2 px-2 py-1 bg-red-600 text-white text-[10px] font-bold tracking-widest z-20 shadow-[0_0_10px_rgba(255,0,0,0.5)] animate-pulse">
+                   -{item.discount}% OFF
+                 </div>
+               )}
+
+               {/* RISK BADGE */}
                {isCritical && (
-                 <div className="absolute top-2 right-2 px-2 py-1 bg-hacker-red/20 border border-hacker-red text-[10px] font-mono tracking-widest text-hacker-red flex items-center gap-1 animate-pulse">
+                 <div className={`absolute ${hasDiscount ? 'bottom-2 right-2' : 'top-2 right-2'} px-2 py-1 bg-hacker-red/20 border border-hacker-red text-[10px] font-mono tracking-widest text-hacker-red flex items-center gap-1`}>
                     <ShieldAlert size={12} /> RISK: {item.riskLevel}
                  </div>
                )}
             </div>
 
+            {/* CONTENT SECTION */}
             <div className="p-4 flex flex-col flex-grow">
               <h3 className={`text-xl font-bold font-mono truncate mb-2 ${isCritical ? 'text-hacker-red' : 'text-white'}`}>
                 {item.name}
@@ -312,7 +385,17 @@
               <div className="mt-auto">
                 <div className="grid grid-cols-2 gap-2 text-xs font-mono text-gray-500 mb-4 border-t border-gray-800 pt-2">
                   <div>SIZE: <span className="text-hacker-green">{item.size}</span></div>
-                  <div>COST: <span className="text-yellow-500">{item.price}</span></div>
+                  <div>
+                    COST: 
+                    {hasDiscount ? (
+                      <span className="ml-1">
+                         <span className="line-through text-gray-600 mr-2">{item.originalPrice}</span>
+                         <span className="text-yellow-500 font-bold">{item.price}</span>
+                      </span>
+                    ) : (
+                      <span className="text-yellow-500 ml-1">{item.price}</span>
+                    )}
+                  </div>
                   <div>DLs: <span className="text-white">{item.downloads}</span></div>
                   <div>ID: <span className="text-gray-600">#{item.id.split('_')[1] || item.id}</span></div>
                 </div>
@@ -412,7 +495,11 @@
                    <img src={selectedItem.image} alt={selectedItem.name} className="w-full h-full object-cover opacity-90" />
                  ) : (
                    <div className="w-full h-96 flex items-center justify-center bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]">
-                      <Terminal size={100} className="text-hacker-green opacity-30" />
+                      {selectedItem?.type === 'APP' ? (
+                        <Cpu size={100} className="text-hacker-green opacity-30" />
+                      ) : (
+                        <FileDigit size={100} className="text-blue-500 opacity-30" />
+                      )}
                    </div>
                  )}
                  <div className="absolute bottom-4 left-4 z-20">
@@ -422,6 +509,11 @@
                    <div className="text-hacker-red text-xs font-bold tracking-widest border border-hacker-red inline-block px-2 py-1 bg-black/80 ml-2 animate-pulse">
                      RISK: {selectedItem?.riskLevel}
                    </div>
+                   {selectedItem?.discount && (
+                     <div className="bg-red-600 text-white text-xs font-bold tracking-widest inline-block px-2 py-1 ml-2 animate-pulse shadow-[0_0_10px_red]">
+                       -{selectedItem.discount}% OFF
+                     </div>
+                   )}
                  </div>
               </div>
 
@@ -457,8 +549,15 @@
                 </div>
 
                 <div className="flex items-center justify-between border-t border-gray-800 pt-6">
-                   <div className="text-3xl font-bold text-yellow-500 font-mono">
-                     {selectedItem?.price}
+                   <div className="flex flex-col">
+                      {selectedItem?.discount ? (
+                        <>
+                          <span className="text-sm text-gray-500 line-through">{selectedItem.originalPrice}</span>
+                          <span className="text-3xl font-bold text-yellow-500 font-mono">{selectedItem?.price}</span>
+                        </>
+                      ) : (
+                        <span className="text-3xl font-bold text-yellow-500 font-mono">{selectedItem?.price}</span>
+                      )}
                    </div>
                    <button 
                      onClick={goToCheckout}
@@ -667,6 +766,7 @@
       // --- MAIN APP ---
 
       const App = () => {
+        const [verified, setVerified] = useState(false);
         const [view, setView] = useState('HOME');
         const [activeTab, setActiveTab] = useState('APP');
         const [items, setItems] = useState([]);
@@ -676,6 +776,36 @@
         const [email, setEmail] = useState('');
         const [insta, setInsta] = useState('');
         const [file, setFile] = useState(null);
+
+        // Security Scripts
+        useEffect(() => {
+           // Prevent Right Click
+           const handleContextMenu = (e) => e.preventDefault();
+           document.addEventListener('contextmenu', handleContextMenu);
+
+           // Prevent DevTools Shortcuts
+           const handleKeyDown = (e) => {
+              if (
+                 e.key === 'F12' || 
+                 (e.ctrlKey && e.shiftKey && e.key === 'I') || 
+                 (e.ctrlKey && e.shiftKey && e.key === 'J') || 
+                 (e.ctrlKey && e.key === 'U')
+              ) {
+                 e.preventDefault();
+              }
+           };
+           document.addEventListener('keydown', handleKeyDown);
+
+           // Console Warning
+           console.clear();
+           console.log("%cSTOP!", "color: red; font-size: 50px; font-weight: bold; -webkit-text-stroke: 1px black;");
+           console.log("%cThis is a protected area. Access to developer tools is restricted and your IP has been logged.", "color: white; font-size: 16px;");
+
+           return () => {
+              document.removeEventListener('contextmenu', handleContextMenu);
+              document.removeEventListener('keydown', handleKeyDown);
+           };
+        }, []);
 
         useEffect(() => {
           setItems(MOCK_DATA.filter(item => item.type === activeTab));
@@ -719,51 +849,56 @@
         return (
           <div className="relative min-h-screen text-hacker-green font-mono crt selection:bg-hacker-red selection:text-white">
             <MatrixRain />
-            <div className="relative z-10 max-w-6xl mx-auto px-4 py-8">
-              {view === 'HOME' && (
-                <HomeView 
-                  items={items} 
-                  activeTab={activeTab} 
-                  setActiveTab={setActiveTab} 
-                  openProduct={openProduct} 
-                />
-              )}
-              {view === 'DETAIL' && (
-                <DetailView 
-                  selectedItem={selectedItem} 
-                  goHome={goHome} 
-                  goToCheckout={goToCheckout} 
-                />
-              )}
-              {view === 'CHECKOUT' && (
-                <CheckoutView 
-                  selectedItem={selectedItem}
-                  email={email}
-                  setEmail={setEmail}
-                  insta={insta}
-                  setInsta={setInsta}
-                  file={file}
-                  setFile={setFile}
-                  completeOrder={completeOrder}
-                  copyToClipboard={copyToClipboard}
-                  setView={setView}
-                />
-              )}
-              {view === 'SUCCESS' && (
-                <SuccessView goHome={goHome} />
-              )}
-              
-              <footer className="text-center text-gray-600 text-xs border-t border-gray-900 pt-8 pb-4 font-mono mt-12">
-                <p className="mb-2">ANONYMOUS ACCESS ONLY. IP LOGGING DISABLED.</p>
-                <p className="text-gray-800">
-                  DISCLAIMER: This is a website theme ("Illegal Store") for design purposes only. 
-                  No actual illegal content is hosted here. All files are simulated.
-                </p>
-                <p className="mt-4">
-                  <span className="text-hacker-red">ERROR 404:</span> SYSTEM IDENTIFICATION FAILED
-                </p>
-              </footer>
-            </div>
+            
+            {!verified ? (
+               <SecurityCheck onVerified={() => setVerified(true)} />
+            ) : (
+              <div className="relative z-10 max-w-6xl mx-auto px-4 py-8">
+                {view === 'HOME' && (
+                  <HomeView 
+                    items={items} 
+                    activeTab={activeTab} 
+                    setActiveTab={setActiveTab} 
+                    openProduct={openProduct} 
+                  />
+                )}
+                {view === 'DETAIL' && (
+                  <DetailView 
+                    selectedItem={selectedItem} 
+                    goHome={goHome} 
+                    goToCheckout={goToCheckout} 
+                  />
+                )}
+                {view === 'CHECKOUT' && (
+                  <CheckoutView 
+                    selectedItem={selectedItem}
+                    email={email}
+                    setEmail={setEmail}
+                    insta={insta}
+                    setInsta={setInsta}
+                    file={file}
+                    setFile={setFile}
+                    completeOrder={completeOrder}
+                    copyToClipboard={copyToClipboard}
+                    setView={setView}
+                  />
+                )}
+                {view === 'SUCCESS' && (
+                  <SuccessView goHome={goHome} />
+                )}
+                
+                <footer className="text-center text-gray-600 text-xs border-t border-gray-900 pt-8 pb-4 font-mono mt-12">
+                  <p className="mb-2">ANONYMOUS ACCESS ONLY. IP LOGGING DISABLED.</p>
+                  <p className="text-gray-800">
+                    DISCLAIMER: This is a website theme ("Illegal Store") for design purposes only. 
+                    No actual illegal content is hosted here. All files are simulated.
+                  </p>
+                  <p className="mt-4">
+                    <span className="text-hacker-red">ERROR 404:</span> SYSTEM IDENTIFICATION FAILED
+                  </p>
+                </footer>
+              </div>
+            )}
           </div>
         );
       };
