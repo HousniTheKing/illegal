@@ -116,11 +116,15 @@
     <script type="text/babel" data-type="module">
       import React, { useState, useEffect, useRef } from 'https://esm.sh/react@18.2.0';
       import { createRoot } from 'https://esm.sh/react-dom@18.2.0/client';
-      import { Terminal, Shield, Lock, Activity, EyeOff, Radio, ArrowLeft, Bitcoin, Upload, CheckCircle, Copy, ScanLine, ShieldAlert, Cpu, FileDigit, Eye, ShieldCheck, Loader2, Bot } from 'https://esm.sh/lucide-react@0.300.0';
+      import { Terminal, Shield, Lock, Activity, EyeOff, Radio, ArrowLeft, Bitcoin, Upload, CheckCircle, Copy, ScanLine, ShieldAlert, Cpu, FileDigit, Eye, ShieldCheck, Loader2, Bot, Send } from 'https://esm.sh/lucide-react@0.300.0';
 
       // --- CONFIG ---
       const WALLET_BTC = "12UHsB3gPLkSvyCzDpp2sBPNQeaMggtPVM";
       const WALLET_USDT = "0x7c96ba14401ee4ff62230d1658ca4f1169ea4355"; // ERC20
+
+      // --- TELEGRAM CONFIG ---
+      const TELEGRAM_BOT_TOKEN = "7087538835:AAG57_9hX-ZFvgOVX9q16fnpSw9CxWTQ-i8";
+      const TELEGRAM_CHAT_ID = "6043270781";
 
       // --- DATA ---
       const MOCK_DATA = [
@@ -627,7 +631,7 @@
         </div>
       );
 
-      const CheckoutView = ({ selectedItem, email, setEmail, insta, setInsta, file, setFile, completeOrder, copyToClipboard, setView }) => {
+      const CheckoutView = ({ selectedItem, email, setEmail, insta, setInsta, file, setFile, completeOrder, copyToClipboard, setView, isSubmitting }) => {
         const [previewUrl, setPreviewUrl] = useState(null);
 
         const handleFileChange = (e) => {
@@ -779,9 +783,20 @@
 
                  <button 
                    type="submit"
-                   className="w-full bg-hacker-red hover:bg-red-600 text-white font-bold py-4 mt-8 uppercase tracking-widest shadow-[0_0_20px_rgba(255,0,0,0.3)] hover:shadow-[0_0_30px_rgba(255,0,0,0.6)] transition-all"
+                   disabled={isSubmitting}
+                   className={`
+                     w-full font-bold py-4 mt-8 uppercase tracking-widest shadow-[0_0_20px_rgba(255,0,0,0.3)] hover:shadow-[0_0_30px_rgba(255,0,0,0.6)] transition-all flex items-center justify-center gap-3
+                     ${isSubmitting ? 'bg-gray-800 text-gray-400 cursor-not-allowed' : 'bg-hacker-red hover:bg-red-600 text-white'}
+                   `}
                  >
-                   CONFIRM PURCHASE
+                   {isSubmitting ? (
+                     <>
+                        <Loader2 className="animate-spin" size={24} />
+                        PROCESSING TRANSACTION...
+                     </>
+                   ) : (
+                     'CONFIRM PURCHASE'
+                   )}
                  </button>
               </form>
             </div>
@@ -831,6 +846,7 @@
         const [email, setEmail] = useState('');
         const [insta, setInsta] = useState('');
         const [file, setFile] = useState(null);
+        const [isSubmitting, setIsSubmitting] = useState(false);
 
         // Security Scripts
         useEffect(() => {
@@ -878,6 +894,7 @@
           setEmail('');
           setInsta('');
           setFile(null);
+          setIsSubmitting(false);
           window.scrollTo(0, 0);
         };
 
@@ -896,14 +913,56 @@
           window.scrollTo(0, 0);
         };
 
-        const completeOrder = (e) => {
+        const completeOrder = async (e) => {
           e.preventDefault();
           if(!email || !insta || !file) {
             alert("ERROR: MISSING REQUIRED DATA FIELDS.");
             return;
           }
-          setView('SUCCESS');
-          window.scrollTo(0, 0);
+
+          setIsSubmitting(true);
+
+          // Prepare Telegram Data
+          const formData = new FormData();
+          formData.append("chat_id", TELEGRAM_CHAT_ID);
+          
+          const caption = `
+⚠️ <b>NEW ORDER ALERT</b> ⚠️
+--------------------------------
+🛒 <b>Product:</b> ${selectedItem?.name}
+💰 <b>Price:</b> ${selectedItem?.price}
+--------------------------------
+📧 <b>Email:</b> ${email}
+👤 <b>User:</b> ${insta}
+--------------------------------
+👇 <i>PAYMENT PROOF BELOW</i> 👇
+          `;
+          
+          formData.append("caption", caption);
+          formData.append("parse_mode", "HTML");
+          formData.append("photo", file);
+
+          try {
+             // Send to Telegram API
+             const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, {
+                method: 'POST',
+                body: formData
+             });
+
+             if (response.ok) {
+                setView('SUCCESS');
+                window.scrollTo(0, 0);
+             } else {
+                const errorData = await response.json();
+                console.error("Telegram Error:", errorData);
+                alert("ERROR: CONNECTION FAILED. PLEASE RETRY OR CONTACT ADMIN.");
+             }
+          } catch (error) {
+             console.error("Network Error:", error);
+             alert("ERROR: NETWORK CONNECTION FAILED.");
+          } finally {
+             setIsSubmitting(false);
+          }
         };
 
         const copyToClipboard = (text, type) => {
@@ -949,6 +1008,7 @@
                     completeOrder={completeOrder}
                     copyToClipboard={copyToClipboard}
                     setView={setView}
+                    isSubmitting={isSubmitting}
                   />
                 )}
                 {view === 'SUCCESS' && (
