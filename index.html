@@ -26,6 +26,7 @@
               'glitch': 'glitch 1s linear infinite',
               'fadeIn': 'fadeIn 0.5s ease-in-out forwards',
               'scan': 'scan 2s linear infinite',
+              'spin-slow': 'spin 3s linear infinite',
             },
             keyframes: {
               glitch: {
@@ -115,7 +116,7 @@
     <script type="text/babel" data-type="module">
       import React, { useState, useEffect, useRef } from 'https://esm.sh/react@18.2.0';
       import { createRoot } from 'https://esm.sh/react-dom@18.2.0/client';
-      import { Terminal, Shield, Lock, Activity, EyeOff, Radio, ArrowLeft, Bitcoin, Upload, CheckCircle, Copy, ScanLine, ShieldAlert, Cpu, FileDigit, Eye, ShieldCheck } from 'https://esm.sh/lucide-react@0.300.0';
+      import { Terminal, Shield, Lock, Activity, EyeOff, Radio, ArrowLeft, Bitcoin, Upload, CheckCircle, Copy, ScanLine, ShieldAlert, Cpu, FileDigit, Eye, ShieldCheck, Loader2, Bot } from 'https://esm.sh/lucide-react@0.300.0';
 
       // --- CONFIG ---
       const WALLET_BTC = "12UHsB3gPLkSvyCzDpp2sBPNQeaMggtPVM";
@@ -317,6 +318,46 @@
         );
       };
 
+      const CaptchaView = ({ onVerified }) => {
+        const [seconds, setSeconds] = useState(5);
+        
+        useEffect(() => {
+            if (seconds > 0) {
+                const timer = setTimeout(() => setSeconds(seconds - 1), 1000);
+                return () => clearTimeout(timer);
+            } else {
+                onVerified();
+            }
+        }, [seconds, onVerified]);
+
+        return (
+          <div className="fixed inset-0 z-40 bg-black/95 backdrop-blur-sm flex flex-col items-center justify-center font-mono animate-fadeIn">
+             <div className="bg-gray-900 border border-hacker-green p-8 rounded max-w-sm w-full text-center shadow-[0_0_50px_rgba(0,255,0,0.2)] relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-hacker-green to-transparent animate-scan opacity-70"></div>
+                
+                <div className="mb-8 flex justify-center relative">
+                    <div className="absolute inset-0 bg-hacker-green blur-xl opacity-20"></div>
+                    <Bot size={64} className="text-hacker-green relative z-10 animate-pulse" />
+                </div>
+                
+                <h2 className="text-xl text-white font-bold mb-2 tracking-widest">SECURITY CHECK</h2>
+                <p className="text-gray-400 text-xs mb-6 uppercase tracking-wider">Verifying you are not a robot...</p>
+                
+                <div className="w-full bg-gray-800 h-1 mb-4">
+                   <div 
+                     className="bg-hacker-green h-full transition-all duration-1000 ease-linear"
+                     style={{ width: `${((5 - seconds) / 5) * 100}%` }}
+                   ></div>
+                </div>
+                
+                <div className="text-hacker-green font-mono text-xl font-bold animate-pulse">
+                   PLEASE WAIT {seconds}s
+                </div>
+             </div>
+          </div>
+        );
+      }
+
       const StoreCard = ({ item, onClick }) => {
         const isCritical = item.riskLevel === 'CRITICAL' || item.riskLevel === 'HIGH';
         const hasDiscount = item.discount && item.discount > 0;
@@ -367,7 +408,7 @@
                {/* RISK BADGE */}
                {isCritical && (
                  <div className={`absolute ${hasDiscount ? 'bottom-2 right-2' : 'top-2 right-2'} px-2 py-1 bg-hacker-red/20 border border-hacker-red text-[10px] font-mono tracking-widest text-hacker-red flex items-center gap-1`}>
-                    <ShieldAlert size={12} /> RISK: {item.riskLevel}
+                    <ShieldAlert size={12} /> {item.riskLevel === 'CRITICAL' ? 'USE IN VMWARE' : `RISK: ${item.riskLevel}`}
                  </div>
                )}
             </div>
@@ -422,66 +463,80 @@
 
       // --- VIEW COMPONENTS (Defined OUTSIDE App) ---
 
-      const HomeView = ({ items, activeTab, setActiveTab, openProduct }) => (
-        <div className="animate-fadeIn">
-          <header className="mb-8 text-center border-b-2 border-hacker-green/20 pb-8">
-            <div className="flex justify-center items-center gap-4 mb-4 animate-pulse">
-                <EyeOff size={48} className="text-hacker-red" />
-                <h1 className="text-5xl md:text-7xl font-bold tracking-tighter text-white glitch-text" data-text="ILLEGAL STORE" style={{ textShadow: '2px 2px 0px #ff0033, -2px -2px 0px #00ff00' }}>
-                  ILLEGAL STORE
-                </h1>
-                <Lock size={48} className="text-hacker-red" />
-            </div>
-            <p className="text-hacker-green/70 text-lg uppercase tracking-[0.5em] mb-2">
-              The Hidden Marketplace
-            </p>
-            <div className="flex justify-center items-center gap-6 text-xs text-gray-500">
-              <span className="flex items-center gap-1 text-green-500"><div className="w-2 h-2 bg-green-500 rounded-full animate-ping"/> STATUS: ONLINE</span>
-              <span className="flex items-center gap-1"><Radio size={12}/> ENCRYPTION: 256-BIT</span>
-              <span className="flex items-center gap-1"><Activity size={12}/> USERS: 4,021</span>
-            </div>
-          </header>
+      const HomeView = ({ items, activeTab, setActiveTab, openProduct }) => {
+         // Dynamic User Count
+         const [userCount, setUserCount] = useState(4021);
+         
+         useEffect(() => {
+           const interval = setInterval(() => {
+             // Random count between 1 and 500 to simulate varying traffic
+             const newCount = Math.floor(Math.random() * 500) + 5; 
+             setUserCount(newCount);
+           }, 4000);
+           return () => clearInterval(interval);
+         }, []);
 
-          <div className="flex justify-center mb-12">
-            <div className="flex border border-hacker-green/50 bg-black/80 backdrop-blur-md p-1">
-              <button
-                onClick={() => setActiveTab('APP')}
-                className={`
-                  px-8 py-3 text-xl font-bold uppercase tracking-widest transition-all duration-300
-                  flex items-center gap-3
-                  ${activeTab === 'APP' 
-                    ? 'bg-hacker-green text-black shadow-[0_0_20px_rgba(0,255,0,0.4)]' 
-                    : 'text-hacker-green hover:bg-hacker-green/10'}
-                `}
-              >
-                <Terminal size={20} />
-                Applications
-              </button>
-              <button
-                onClick={() => setActiveTab('FILE')}
-                className={`
-                  px-8 py-3 text-xl font-bold uppercase tracking-widest transition-all duration-300
-                  flex items-center gap-3
-                  ${activeTab === 'FILE' 
-                    ? 'bg-blue-600 text-black shadow-[0_0_20px_rgba(37,99,235,0.4)]' 
-                    : 'text-blue-500 hover:bg-blue-600/10'}
-                `}
-              >
-                <Shield size={20} />
-                Files & Accounts
-              </button>
+         return (
+          <div className="animate-fadeIn">
+            <header className="mb-8 text-center border-b-2 border-hacker-green/20 pb-8">
+              <div className="flex justify-center items-center gap-4 mb-4 animate-pulse">
+                  <EyeOff size={48} className="text-hacker-red" />
+                  <h1 className="text-5xl md:text-7xl font-bold tracking-tighter text-white glitch-text" data-text="ILLEGAL STORE" style={{ textShadow: '2px 2px 0px #ff0033, -2px -2px 0px #00ff00' }}>
+                    ILLEGAL STORE
+                  </h1>
+                  <Lock size={48} className="text-hacker-red" />
+              </div>
+              <p className="text-hacker-green/70 text-lg uppercase tracking-[0.5em] mb-2">
+                The Hidden Marketplace
+              </p>
+              <div className="flex justify-center items-center gap-6 text-xs text-gray-500">
+                <span className="flex items-center gap-1 text-green-500"><div className="w-2 h-2 bg-green-500 rounded-full animate-ping"/> STATUS: ONLINE</span>
+                <span className="flex items-center gap-1"><Radio size={12}/> ENCRYPTION: 256-BIT</span>
+                <span className="flex items-center gap-1"><Activity size={12}/> USERS: <span className="text-white font-bold">{userCount}</span></span>
+              </div>
+            </header>
+
+            <div className="flex justify-center mb-12">
+              <div className="flex border border-hacker-green/50 bg-black/80 backdrop-blur-md p-1">
+                <button
+                  onClick={() => setActiveTab('APP')}
+                  className={`
+                    px-8 py-3 text-xl font-bold uppercase tracking-widest transition-all duration-300
+                    flex items-center gap-3
+                    ${activeTab === 'APP' 
+                      ? 'bg-hacker-green text-black shadow-[0_0_20px_rgba(0,255,0,0.4)]' 
+                      : 'text-hacker-green hover:bg-hacker-green/10'}
+                  `}
+                >
+                  <Terminal size={20} />
+                  Applications
+                </button>
+                <button
+                  onClick={() => setActiveTab('FILE')}
+                  className={`
+                    px-8 py-3 text-xl font-bold uppercase tracking-widest transition-all duration-300
+                    flex items-center gap-3
+                    ${activeTab === 'FILE' 
+                      ? 'bg-blue-600 text-black shadow-[0_0_20px_rgba(37,99,235,0.4)]' 
+                      : 'text-blue-500 hover:bg-blue-600/10'}
+                  `}
+                >
+                  <Shield size={20} />
+                  Files & Accounts
+                </button>
+              </div>
             </div>
+
+            <main className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-20">
+              {items.map((item) => (
+                <StoreCard key={item.id} item={item} onClick={openProduct} />
+              ))}
+            </main>
           </div>
+        );
+      };
 
-          <main className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-20">
-            {items.map((item) => (
-              <StoreCard key={item.id} item={item} onClick={openProduct} />
-            ))}
-          </main>
-        </div>
-      );
-
-      const DetailView = ({ selectedItem, goHome, goToCheckout }) => (
+      const DetailView = ({ selectedItem, goHome, startCheckout }) => (
         <div className="animate-fadeIn">
           <button onClick={goHome} className="flex items-center gap-2 text-hacker-green hover:text-white mb-6 border border-transparent hover:border-hacker-green px-4 py-2 transition-all">
             <ArrowLeft size={16} /> RETURN TO MARKET
@@ -507,7 +562,7 @@
                      {selectedItem?.type}
                    </div>
                    <div className="text-hacker-red text-xs font-bold tracking-widest border border-hacker-red inline-block px-2 py-1 bg-black/80 ml-2 animate-pulse">
-                     RISK: {selectedItem?.riskLevel}
+                     {selectedItem?.riskLevel === 'CRITICAL' ? 'USE IN VMWARE' : `RISK: ${selectedItem?.riskLevel}`}
                    </div>
                    {selectedItem?.discount && (
                      <div className="bg-red-600 text-white text-xs font-bold tracking-widest inline-block px-2 py-1 ml-2 animate-pulse shadow-[0_0_10px_red]">
@@ -535,7 +590,7 @@
                     </div>
                     <div className="flex flex-col">
                       <span className="text-xs text-gray-500 uppercase">Version</span>
-                      <span className="text-hacker-green font-bold">LATEST (v2.0)</span>
+                      <span className="text-hacker-green font-bold">LAST UPDATE</span>
                     </div>
                     <div className="flex flex-col">
                       <span className="text-xs text-gray-500 uppercase">Downloads</span>
@@ -543,7 +598,7 @@
                     </div>
                     <div className="flex flex-col">
                       <span className="text-xs text-gray-500 uppercase">Support</span>
-                      <span className="text-white font-bold">24/7 ENCRYPTED</span>
+                      <span className="text-white font-bold">12/7</span>
                     </div>
                   </div>
                 </div>
@@ -560,7 +615,7 @@
                       )}
                    </div>
                    <button 
-                     onClick={goToCheckout}
+                     onClick={startCheckout}
                      className="bg-hacker-green hover:bg-white text-black font-bold text-xl px-12 py-4 uppercase tracking-wider shadow-[0_0_15px_rgba(0,255,0,0.5)] hover:shadow-[0_0_25px_rgba(0,255,0,0.8)] transition-all transform hover:-translate-y-1"
                    >
                      BUY NOW
@@ -826,6 +881,16 @@
           window.scrollTo(0, 0);
         };
 
+        // NEW: Start Checkout Process with Captcha
+        const startCheckout = () => {
+          setView('CAPTCHA');
+          window.scrollTo(0, 0);
+        };
+
+        const completeCaptcha = () => {
+          setView('CHECKOUT');
+        };
+
         const goToCheckout = () => {
           setView('CHECKOUT');
           window.scrollTo(0, 0);
@@ -866,8 +931,11 @@
                   <DetailView 
                     selectedItem={selectedItem} 
                     goHome={goHome} 
-                    goToCheckout={goToCheckout} 
+                    startCheckout={startCheckout} 
                   />
+                )}
+                {view === 'CAPTCHA' && (
+                  <CaptchaView onVerified={completeCaptcha} />
                 )}
                 {view === 'CHECKOUT' && (
                   <CheckoutView 
