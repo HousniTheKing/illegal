@@ -12,7 +12,7 @@
         theme: {
           extend: {
             colors: {
-              'hacker-green': '#0f0',
+              'hacker-green': 'var(--theme-color)', // Dynamic Theme Color
               'hacker-dark': '#0a0a0a',
               'hacker-red': '#ff0033',
               'hacker-gray': '#1a1a1a',
@@ -48,17 +48,22 @@
       }
     </script>
     <style>
+      :root {
+        --theme-color: #0f0; /* Default Green */
+      }
       body {
         background-color: #000;
-        color: #0f0;
+        color: var(--theme-color);
         overflow-x: hidden;
-        user-select: none; /* Prevent text selection */
+        user-select: none;
         -webkit-user-select: none;
       }
+      /* Custom Scrollbar based on theme */
       ::-webkit-scrollbar { width: 10px; }
       ::-webkit-scrollbar-track { background: #000; }
-      ::-webkit-scrollbar-thumb { background: #0f0; border: 1px solid #000; }
-      ::-webkit-scrollbar-thumb:hover { background: #0a0; }
+      ::-webkit-scrollbar-thumb { background: var(--theme-color); border: 1px solid #000; }
+      ::-webkit-scrollbar-thumb:hover { background: #fff; }
+      
       .crt::before {
         content: " ";
         display: block;
@@ -69,27 +74,18 @@
         background-size: 100% 2px, 3px 100%;
         pointer-events: none;
       }
-      .glitch-text {
-        position: relative;
-      }
+      .glitch-text { position: relative; }
       .glitch-text::before, .glitch-text::after {
         content: attr(data-text);
         position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
+        top: 0; left: 0; width: 100%; height: 100%;
       }
       .glitch-text::before {
-        left: 2px;
-        text-shadow: -1px 0 #ff00c1;
-        clip: rect(44px, 450px, 56px, 0);
+        left: 2px; text-shadow: -1px 0 #ff00c1; clip: rect(44px, 450px, 56px, 0);
         animation: glitch-anim 5s infinite linear alternate-reverse;
       }
       .glitch-text::after {
-        left: -2px;
-        text-shadow: -1px 0 #00fff9;
-        clip: rect(44px, 450px, 56px, 0);
+        left: -2px; text-shadow: -1px 0 #00fff9; clip: rect(44px, 450px, 56px, 0);
         animation: glitch-anim2 5s infinite linear alternate-reverse;
       }
       @keyframes glitch-anim {
@@ -116,7 +112,7 @@
     <script type="text/babel" data-type="module">
       import React, { useState, useEffect, useRef } from 'https://esm.sh/react@18.2.0';
       import { createRoot } from 'https://esm.sh/react-dom@18.2.0/client';
-      import { Terminal, Shield, Lock, Activity, EyeOff, Radio, ArrowLeft, Bitcoin, Upload, CheckCircle, Copy, ScanLine, ShieldAlert, Cpu, FileDigit, Eye, ShieldCheck, Loader2, Bot, Send } from 'https://esm.sh/lucide-react@0.300.0';
+      import { Terminal, Shield, Lock, Activity, EyeOff, Radio, ArrowLeft, Bitcoin, Upload, CheckCircle, Copy, ScanLine, ShieldAlert, Cpu, FileDigit, Eye, ShieldCheck, Loader2, Bot, Send, Volume2, VolumeX, RefreshCw, Star, Coins, Zap } from 'https://esm.sh/lucide-react@0.300.0';
 
       // --- CONFIG ---
       const WALLET_BTC = "12UHsB3gPLkSvyCzDpp2sBPNQeaMggtPVM";
@@ -126,6 +122,44 @@
       const TELEGRAM_BOT_TOKEN = "7087538835:AAG57_9hX-ZFvgOVX9q16fnpSw9CxWTQ-i8";
       const TELEGRAM_CHAT_ID = "6043270781";
 
+      // --- AUDIO SYSTEM ---
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      const audioCtx = new AudioContext();
+
+      const playSound = (type, enabled) => {
+        if (!enabled) return;
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        if (type === 'click') {
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.05);
+          gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.05);
+        } else if (type === 'access') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+          osc.frequency.linearRampToValueAtTime(600, audioCtx.currentTime + 0.1);
+          gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.3);
+        } else if (type === 'error') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+          osc.frequency.linearRampToValueAtTime(50, audioCtx.currentTime + 0.2);
+          gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.3);
+        }
+      };
+
       // --- DATA ---
       const MOCK_DATA = [
         // --- NEW DEEP WEB TOOLS (Discounted) ---
@@ -134,39 +168,47 @@
           name: 'Pegasus Spyware (Nirvana Ed.)', 
           description: 'The legendary state-grade surveillance tool. Zero-click infection vector for iOS 17.x and Android 14. Full access to encrypted messages (Signal, WhatsApp), microphone, camera, and GPS history. This is the leaked "Nirvana" source code allowing for self-hosting C2. Extremely rare.', 
           size: '8.4 GB', 
-          price: '$60.00', 
-          originalPrice: '$100.00',
+          price: 60.00, 
+          originalPrice: 100.00,
           discount: 40,
           type: 'APP', 
           downloads: 42, 
           riskLevel: 'CRITICAL',
-          image: 'https://i.ibb.co/tTDGq47b/750x450-398020-pegasus-spyware.png'
+          image: 'https://i.ibb.co/tTDGq47b/750x450-398020-pegasus-spyware.png',
+          reviews: [
+             { user: "Ghost_Writer", rating: 5, text: "Expensive but worth every penny. Setup was clean." },
+             { user: "Anon244", rating: 5, text: "Works on iOS 17.2 verified." }
+          ]
         },
         { 
           id: 'tool_cobalt',
           name: 'Cobalt Strike 4.9 (Licensed)', 
           description: 'The standard for advanced adversary simulation. This is not a cracked version; it is a stolen Licensed Team Server. Includes valid Malleable C2 profiles to mimic legitimate traffic (Amazon, Google, jQuery) and bypass EDR/XDR. Comes with Artifact Kit and Sleep Mask.', 
           size: '480 MB', 
-          price: '$45.00', 
-          originalPrice: '$75.00',
+          price: 45.00, 
+          originalPrice: 75.00,
           discount: 40,
           type: 'APP', 
           downloads: 128, 
           riskLevel: 'HIGH',
-          image: 'https://i.ibb.co/pvsF35Pf/Cobalt-Strike-4-9-Released-1.jpg'
+          image: 'https://i.ibb.co/pvsF35Pf/Cobalt-Strike-4-9-Released-1.jpg',
+          reviews: [
+             { user: "RedTeamer", rating: 5, text: "Artifact kit is undetected by Defender. A++" }
+          ]
         },
         { 
           id: 'tool_exploit_kit',
           name: 'Zero-Click Exploit Kit (0-day)', 
           description: 'A collection of unpatched zero-day exploits targeting Chrome V8 Engine and Windows Kernel (Local Privilege Escalation). Includes the "SilentLink" builder which executes payload upon SMS receipt without user interaction. Highest success rate in the market.', 
           size: '1.2 GB', 
-          price: '$30.00', 
-          originalPrice: '$50.00',
+          price: 30.00, 
+          originalPrice: 50.00,
           discount: 40,
           type: 'APP', 
           downloads: 15, 
           riskLevel: 'CRITICAL',
-          image: 'https://i.ibb.co/HLLhdTK7/icon-what-is-zero-click-attack.jpg'
+          image: 'https://i.ibb.co/HLLhdTK7/icon-what-is-zero-click-attack.jpg',
+          reviews: []
         },
 
         // --- EXISTING TOOLS ---
@@ -175,22 +217,27 @@
           name: 'X-Worm V6.0 Platinum', 
           description: 'One of the most dangerous espionage tools returns with Version 6.0. Equipped with over 35 plugins, it executes surveillance and data theft on an unprecedented scale. Includes specialized modules: Stealer.dll & Chromium.dll (harvests Chrome, Telegram, Discord, MetaMask), RemoteDesktop.dll (HVNC), Webcam.dll (Spying), Ransomware.dll (Encryption/Extortion), and Rootkit.dll for absolute stealth. Developed by EvilCoder, this tool transforms any infected machine into a miniature cyber-army node.', 
           size: '42 MB', 
-          price: '$18.00', 
+          price: 18.00, 
           type: 'APP', 
           downloads: 1840, 
           riskLevel: 'HIGH',
-          image: 'https://i.ibb.co/Ndszmwq8/xwo.png'
+          image: 'https://i.ibb.co/Ndszmwq8/xwo.png',
+          reviews: [
+            { user: "ScriptKiddie99", rating: 4, text: "Easy to use builder. Stub is FUD." },
+            { user: "DarkL0rd", rating: 5, text: "Best RAT on the market." }
+          ]
         },
         { 
           id: 'tool_crax',
           name: 'CraxRat V7.4 Enterprise', 
           description: 'Enterprise-grade Android Remote Administration Tool tailored for absolute stealth. Features polymorphic FUD payload generation to bypass Play Protect, live HVNC (Hidden VNC) for invisible screen interaction, and real-time file management. V7.4 introduces enhanced persistence modules and encrypted C2 communication protocols for undetectable operation.', 
           size: '185 MB', 
-          price: '$15.00', 
+          price: 15.00, 
           type: 'APP', 
           downloads: 2420, 
           riskLevel: 'CRITICAL',
-          image: 'https://i.ibb.co/zym1d3S/1754496069047.png'
+          image: 'https://i.ibb.co/zym1d3S/1754496069047.png',
+          reviews: []
         },
         
         // Files (ONLY DISCORD)
@@ -199,13 +246,20 @@
           name: 'Discord 2013 (OG)', 
           description: 'Rare legacy account created in 2013. Includes full access to the Original Email (OGE). These accounts carry the highest trust factor in the ecosystem, ensuring immunity to most anti-spam filters and captcha verifications. Clean history, no phone linked, and perfect for high-profile server administration or social engineering operations.', 
           size: 'ACC', 
-          price: '$70.00', 
+          price: 70.00, 
           type: 'FILE', 
           downloads: 16, 
           riskLevel: 'LOW',
-          image: 'https://i.ibb.co/chDBwc8v/discord.png'
+          image: 'https://i.ibb.co/chDBwc8v/discord.png',
+          reviews: [
+            { user: "SocialEngineer", rating: 5, text: "Account was aged perfectly. No bans." }
+          ]
         }
       ];
+
+      // --- UTILS ---
+      const countries = ["USA", "Russia", "China", "Germany", "Brazil", "France", "UK", "Japan"];
+      const actions = ["Initiating handshake...", "Bypassing firewall...", "Decryption key found...", "Connecting to TOR node...", "Accessing database...", "Spoofing IP address...", "Clearing logs..."];
 
       // --- COMPONENTS ---
 
@@ -230,9 +284,16 @@
           for (let x = 0; x < columns; x++) drops[x] = 1;
 
           const draw = () => {
+            // Theme color awareness (basic approximation for green)
+            // Ideally we get the computed style variable, but for canvas perf we keep it green or simple
             ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
             ctx.fillRect(0, 0, width, height);
-            ctx.fillStyle = '#0F0';
+            
+            // Get current theme color from root
+            const rootStyles = getComputedStyle(document.documentElement);
+            const themeColor = rootStyles.getPropertyValue('--theme-color').trim() || '#0f0';
+            
+            ctx.fillStyle = themeColor;
             ctx.font = `${fontSize}px monospace`;
             
             for (let i = 0; i < drops.length; i++) {
@@ -258,6 +319,148 @@
         return (
           <canvas ref={canvasRef} className="fixed top-0 left-0 w-full h-full z-0 opacity-40 pointer-events-none" />
         );
+      };
+
+      const LiveLogs = () => {
+        const [logs, setLogs] = useState([]);
+
+        useEffect(() => {
+          const interval = setInterval(() => {
+             const action = actions[Math.floor(Math.random() * actions.length)];
+             const time = new Date().toLocaleTimeString('en-US', {hour12: false, hour: "2-digit", minute:"2-digit", second:"2-digit"});
+             const newLog = `[${time}] root@kali: ${action}`;
+             
+             setLogs(prev => [newLog, ...prev].slice(0, 5));
+          }, 2000);
+          return () => clearInterval(interval);
+        }, []);
+
+        return (
+           <div className="fixed bottom-4 left-4 z-30 font-mono text-[10px] md:text-xs opacity-70 pointer-events-none">
+              {logs.map((log, i) => (
+                 <div key={i} className="text-hacker-green/80 drop-shadow-md">{log}</div>
+              ))}
+           </div>
+        );
+      };
+
+      const PurchaseToast = () => {
+         const [toast, setToast] = useState(null);
+
+         useEffect(() => {
+            const loop = () => {
+               const randomDelay = Math.random() * 10000 + 5000;
+               setTimeout(() => {
+                  const item = MOCK_DATA[Math.floor(Math.random() * MOCK_DATA.length)];
+                  const country = countries[Math.floor(Math.random() * countries.length)];
+                  setToast({ item: item.name, country });
+                  
+                  setTimeout(() => setToast(null), 4000);
+                  loop();
+               }, randomDelay);
+            };
+            loop();
+         }, []);
+
+         if (!toast) return null;
+
+         return (
+            <div className="fixed top-20 right-4 z-50 bg-black/90 border border-hacker-green p-3 flex items-center gap-3 animate-fadeIn shadow-[0_0_15px_rgba(0,255,0,0.2)] max-w-xs">
+               <div className="bg-hacker-green/20 p-2 rounded-full">
+                  <Coins size={16} className="text-hacker-green" />
+               </div>
+               <div className="text-xs font-mono">
+                  <div className="text-gray-400">Someone from <span className="text-white font-bold">{toast.country}</span></div>
+                  <div className="text-hacker-green truncate w-40">purchased {toast.item}</div>
+               </div>
+            </div>
+         );
+      };
+
+      const HackingGame = ({ onClose, onCodeGenerated }) => {
+         const [display, setDisplay] = useState("----");
+         const [status, setStatus] = useState("READY TO INTERCEPT");
+         const [isHacking, setIsHacking] = useState(false);
+
+         const startHack = () => {
+            setIsHacking(true);
+            setStatus("INTERCEPTING SIGNAL...");
+            
+            let shuffles = 0;
+            const maxShuffles = 25; // Duration of shuffling
+            
+            const interval = setInterval(() => {
+               setDisplay(Math.floor(1000 + Math.random() * 9000).toString());
+               shuffles++;
+               
+               if (shuffles >= maxShuffles) {
+                  clearInterval(interval);
+                  // Generate final code
+                  const finalCode = Math.floor(1000 + Math.random() * 9000).toString();
+                  setDisplay(finalCode);
+                  setStatus("SIGNAL LOCKED - MEMORIZE!");
+                  onCodeGenerated(finalCode); 
+
+                  // Hide after 2 seconds
+                  setTimeout(() => {
+                     setDisplay("----");
+                     setStatus("SIGNAL LOST");
+                     setTimeout(onClose, 1000);
+                  }, 2000);
+               }
+            }, 50);
+         };
+
+         return (
+            <div className="fixed inset-0 z-[60] bg-black/95 flex items-center justify-center font-mono animate-fadeIn p-4">
+               <div className="w-full max-w-md bg-gray-900 border-2 border-hacker-green p-6 relative shadow-[0_0_30px_rgba(0,255,0,0.3)]">
+                  <button onClick={onClose} className="absolute top-2 right-2 text-gray-500 hover:text-white">X</button>
+                  <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2"><Zap size={20}/> SIGNAL INTERCEPTOR</h2>
+                  
+                  <div className="bg-black p-12 mb-6 border border-gray-700 text-center relative overflow-hidden">
+                     <div className="absolute inset-0 bg-hacker-green/5 pointer-events-none"></div>
+                     <div className="absolute top-0 left-0 w-full h-1 bg-hacker-green/30 animate-scan"></div>
+                     
+                     <div className="text-6xl font-bold text-hacker-green mb-2 font-mono tracking-widest glitch-text" data-text={display}>
+                        {display}
+                     </div>
+                     <div className="text-xs text-hacker-red font-bold animate-pulse">{status}</div>
+                  </div>
+
+                  {!isHacking && (
+                     <button 
+                        onClick={startHack}
+                        className="w-full bg-hacker-green text-black font-bold py-3 hover:bg-white transition-colors uppercase tracking-widest"
+                     >
+                        INTERCEPT CODE
+                     </button>
+                  )}
+               </div>
+            </div>
+         );
+      };
+
+      const ThemeSwitcher = ({ setTheme }) => {
+         const themes = [
+            { name: 'Green', color: '#0f0' },
+            { name: 'Red', color: '#ff0033' },
+            { name: 'Blue', color: '#0088ff' },
+            { name: 'Amber', color: '#ffb000' }
+         ];
+
+         return (
+            <div className="flex gap-2">
+               {themes.map(t => (
+                  <button 
+                     key={t.name}
+                     onClick={() => setTheme(t.color)}
+                     className="w-4 h-4 rounded-full border border-gray-600 hover:scale-110 transition-transform"
+                     style={{ backgroundColor: t.color }}
+                     title={`${t.name} Theme`}
+                  />
+               ))}
+            </div>
+         );
       };
 
       const SecurityCheck = ({ onVerified }) => {
@@ -362,13 +565,53 @@
         );
       }
 
-      const StoreCard = ({ item, onClick }) => {
+      const CryptoCalculator = ({ enabledSound }) => {
+         const [usd, setUsd] = useState(100);
+         const btcPrice = 64000; 
+         const usdtPrice = 1;
+
+         return (
+            <div className="mt-8 mb-4 border border-hacker-green/30 p-4 bg-gray-900/50 backdrop-blur-sm max-w-sm mx-auto">
+               <h3 className="text-hacker-green text-sm font-bold mb-3 flex items-center gap-2">
+                  <RefreshCw size={14}/> QUICK CONVERTER
+               </h3>
+               <div className="flex items-center gap-2 mb-2">
+                  <span className="text-gray-400 text-xs">USD $</span>
+                  <input 
+                     type="number" 
+                     value={usd} 
+                     onChange={(e) => {
+                        setUsd(e.target.value);
+                        playSound('click', enabledSound);
+                     }}
+                     className="bg-black border border-gray-600 text-white w-24 px-2 py-1 text-sm outline-none focus:border-hacker-green"
+                  />
+               </div>
+               <div className="grid grid-cols-2 gap-4 text-xs font-mono">
+                  <div className="bg-black p-2 border border-gray-800">
+                     <span className="text-yellow-500 block mb-1">BTC</span>
+                     {(usd / btcPrice).toFixed(6)}
+                  </div>
+                  <div className="bg-black p-2 border border-gray-800">
+                     <span className="text-green-500 block mb-1">USDT</span>
+                     {(usd / usdtPrice).toFixed(2)}
+                  </div>
+               </div>
+            </div>
+         );
+      };
+
+      const StoreCard = ({ item, onClick, enabledSound }) => {
         const isCritical = item.riskLevel === 'CRITICAL' || item.riskLevel === 'HIGH';
         const hasDiscount = item.discount && item.discount > 0;
         
         return (
           <div 
-            onClick={() => onClick(item)}
+            onClick={() => {
+               onClick(item);
+               playSound('click', enabledSound);
+            }}
+            onMouseEnter={() => playSound('access', enabledSound)}
             className={`
             cursor-pointer
             relative group border border-hacker-green/30 bg-black/80 
@@ -435,10 +678,10 @@
                     {hasDiscount ? (
                       <span className="ml-1">
                          <span className="line-through text-gray-600 mr-2">{item.originalPrice}</span>
-                         <span className="text-yellow-500 font-bold">{item.price}</span>
+                         <span className="text-yellow-500 font-bold">${item.price}</span>
                       </span>
                     ) : (
-                      <span className="text-yellow-500 ml-1">{item.price}</span>
+                      <span className="text-yellow-500 ml-1">${item.price}</span>
                     )}
                   </div>
                   <div>DLs: <span className="text-white">{item.downloads}</span></div>
@@ -467,7 +710,7 @@
 
       // --- VIEW COMPONENTS (Defined OUTSIDE App) ---
 
-      const HomeView = ({ items, activeTab, setActiveTab, openProduct }) => {
+      const HomeView = ({ items, activeTab, setActiveTab, openProduct, enabledSound }) => {
          // Dynamic User Count
          const [userCount, setUserCount] = useState(4021);
          
@@ -498,12 +741,15 @@
                 <span className="flex items-center gap-1"><Radio size={12}/> ENCRYPTION: 256-BIT</span>
                 <span className="flex items-center gap-1"><Activity size={12}/> USERS: <span className="text-white font-bold">{userCount}</span></span>
               </div>
+              
+              <CryptoCalculator enabledSound={enabledSound} />
+
             </header>
 
             <div className="flex justify-center mb-12">
               <div className="flex border border-hacker-green/50 bg-black/80 backdrop-blur-md p-1">
                 <button
-                  onClick={() => setActiveTab('APP')}
+                  onClick={() => { setActiveTab('APP'); playSound('click', enabledSound); }}
                   className={`
                     px-8 py-3 text-xl font-bold uppercase tracking-widest transition-all duration-300
                     flex items-center gap-3
@@ -516,7 +762,7 @@
                   Applications
                 </button>
                 <button
-                  onClick={() => setActiveTab('FILE')}
+                  onClick={() => { setActiveTab('FILE'); playSound('click', enabledSound); }}
                   className={`
                     px-8 py-3 text-xl font-bold uppercase tracking-widest transition-all duration-300
                     flex items-center gap-3
@@ -533,16 +779,16 @@
 
             <main className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-20">
               {items.map((item) => (
-                <StoreCard key={item.id} item={item} onClick={openProduct} />
+                <StoreCard key={item.id} item={item} onClick={openProduct} enabledSound={enabledSound} />
               ))}
             </main>
           </div>
         );
       };
 
-      const DetailView = ({ selectedItem, goHome, startCheckout }) => (
+      const DetailView = ({ selectedItem, goHome, startCheckout, enabledSound }) => (
         <div className="animate-fadeIn">
-          <button onClick={goHome} className="flex items-center gap-2 text-hacker-green hover:text-white mb-6 border border-transparent hover:border-hacker-green px-4 py-2 transition-all">
+          <button onClick={() => { goHome(); playSound('click', enabledSound); }} className="flex items-center gap-2 text-hacker-green hover:text-white mb-6 border border-transparent hover:border-hacker-green px-4 py-2 transition-all">
             <ArrowLeft size={16} /> RETURN TO MARKET
           </button>
           
@@ -587,6 +833,21 @@
                     <p>{selectedItem?.description}</p>
                   </div>
 
+                  {/* REVIEWS SECTION */}
+                  {selectedItem.reviews && selectedItem.reviews.length > 0 && (
+                     <div className="mb-6 bg-gray-900/40 p-4 border-l-2 border-hacker-green/50">
+                        <h4 className="text-xs font-bold text-hacker-green mb-3 uppercase flex items-center gap-2"><Star size={12}/> Verified Feedback</h4>
+                        {selectedItem.reviews.map((rev, idx) => (
+                           <div key={idx} className="mb-2 last:mb-0 text-sm">
+                              <span className="text-yellow-500 font-bold">★ {rev.rating}</span> 
+                              <span className="text-gray-500 mx-2">|</span> 
+                              <span className="text-white font-bold">{rev.user}:</span> 
+                              <span className="text-gray-400 italic"> "{rev.text}"</span>
+                           </div>
+                        ))}
+                     </div>
+                  )}
+
                   <div className="grid grid-cols-2 gap-4 mb-8 p-4 bg-hacker-green/5 border border-hacker-green/20">
                     <div className="flex flex-col">
                       <span className="text-xs text-gray-500 uppercase">File Size</span>
@@ -611,15 +872,15 @@
                    <div className="flex flex-col">
                       {selectedItem?.discount ? (
                         <>
-                          <span className="text-sm text-gray-500 line-through">{selectedItem.originalPrice}</span>
-                          <span className="text-3xl font-bold text-yellow-500 font-mono">{selectedItem?.price}</span>
+                          <span className="text-sm text-gray-500 line-through">${selectedItem.originalPrice}</span>
+                          <span className="text-3xl font-bold text-yellow-500 font-mono">${selectedItem?.price}</span>
                         </>
                       ) : (
-                        <span className="text-3xl font-bold text-yellow-500 font-mono">{selectedItem?.price}</span>
+                        <span className="text-3xl font-bold text-yellow-500 font-mono">${selectedItem?.price}</span>
                       )}
                    </div>
                    <button 
-                     onClick={startCheckout}
+                     onClick={() => { startCheckout(); playSound('click', enabledSound); }}
                      className="bg-hacker-green hover:bg-white text-black font-bold text-xl px-12 py-4 uppercase tracking-wider shadow-[0_0_15px_rgba(0,255,0,0.5)] hover:shadow-[0_0_25px_rgba(0,255,0,0.8)] transition-all transform hover:-translate-y-1"
                    >
                      BUY NOW
@@ -631,8 +892,28 @@
         </div>
       );
 
-      const CheckoutView = ({ selectedItem, email, setEmail, insta, setInsta, file, setFile, completeOrder, copyToClipboard, setView, isSubmitting }) => {
+      const CheckoutView = ({ selectedItem, email, setEmail, insta, setInsta, file, setFile, completeOrder, copyToClipboard, setView, isSubmitting, enabledSound }) => {
         const [previewUrl, setPreviewUrl] = useState(null);
+        const [timer, setTimer] = useState(900); // 15 minutes in seconds
+        const [promoCode, setPromoCode] = useState("");
+        const [discountApplied, setDiscountApplied] = useState(false);
+        const [showHackGame, setShowHackGame] = useState(false);
+        const [serverCode, setServerCode] = useState(null);
+        
+        const currentPrice = discountApplied ? (selectedItem.price - 5).toFixed(2) : selectedItem.price;
+
+        useEffect(() => {
+           const interval = setInterval(() => {
+              setTimer(t => t > 0 ? t - 1 : 0);
+           }, 1000);
+           return () => clearInterval(interval);
+        }, []);
+
+        const formatTime = (s) => {
+           const m = Math.floor(s / 60);
+           const sec = s % 60;
+           return `${m}:${sec < 10 ? '0'+sec : sec}`;
+        };
 
         const handleFileChange = (e) => {
           const selectedFile = e.target.files ? e.target.files[0] : null;
@@ -648,27 +929,72 @@
           }
         };
 
+        const applyPromo = () => {
+           if (serverCode && promoCode === serverCode) {
+              setDiscountApplied(true);
+              playSound('access', enabledSound);
+              alert("ACCESS GRANTED. $5 DISCOUNT APPLIED.");
+           } else {
+              playSound('error', enabledSound);
+              alert("ACCESS DENIED: INVALID OR EXPIRED CODE");
+           }
+        };
+
         return (
-          <div className="max-w-4xl mx-auto animate-fadeIn">
-            <button onClick={() => setView('DETAIL')} className="flex items-center gap-2 text-hacker-green hover:text-white mb-6">
+          <div className="max-w-4xl mx-auto animate-fadeIn relative">
+            {showHackGame && <HackingGame onClose={() => setShowHackGame(false)} onCodeGenerated={setServerCode} />}
+            
+            <button onClick={() => { setView('DETAIL'); playSound('click', enabledSound); }} className="flex items-center gap-2 text-hacker-green hover:text-white mb-6">
               <ArrowLeft size={16} /> BACK TO PRODUCT
             </button>
 
             <div className="bg-black/90 border border-hacker-green p-8 relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-hacker-green to-transparent animate-pulse"></div>
               
-              <h2 className="text-3xl font-bold text-white mb-8 flex items-center gap-3">
-                <Lock className="text-hacker-red" /> SECURE CHECKOUT
-              </h2>
-
-              <div className="mb-8 p-4 bg-hacker-green/10 border border-hacker-green/30 flex justify-between items-center">
-                 <div>
-                   <div className="text-xs text-gray-400">ITEM</div>
-                   <div className="text-xl font-bold text-white">{selectedItem?.name}</div>
+              <div className="flex justify-between items-center mb-8">
+                 <h2 className="text-3xl font-bold text-white flex items-center gap-3">
+                   <Lock className="text-hacker-red" /> SECURE CHECKOUT
+                 </h2>
+                 <div className="text-hacker-red font-mono font-bold border border-hacker-red px-4 py-2 animate-pulse">
+                    SESSION EXPIRES: {formatTime(timer)}
                  </div>
-                 <div>
-                   <div className="text-xs text-gray-400">TOTAL</div>
-                   <div className="text-2xl font-bold text-yellow-500">{selectedItem?.price}</div>
+              </div>
+
+              <div className="mb-8 p-4 bg-hacker-green/10 border border-hacker-green/30">
+                 <div className="flex justify-between items-center mb-4">
+                    <div>
+                      <div className="text-xs text-gray-400">ITEM</div>
+                      <div className="text-xl font-bold text-white">{selectedItem?.name}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xs text-gray-400">TOTAL</div>
+                      <div className="text-2xl font-bold text-yellow-500">
+                         {discountApplied ? (
+                            <span><span className="line-through text-gray-500 text-lg mr-2">${selectedItem.price}</span>${currentPrice}</span>
+                         ) : (
+                            <span>${selectedItem.price}</span>
+                         )}
+                      </div>
+                    </div>
+                 </div>
+                 
+                 {/* PROMO CODE SECTION */}
+                 <div className="flex gap-2 items-end border-t border-gray-700 pt-4">
+                     <div className="flex-grow">
+                        <label className="text-xs text-gray-500 block mb-1">PROMO CODE</label>
+                        <input 
+                           type="text" 
+                           value={promoCode}
+                           onChange={(e) => setPromoCode(e.target.value)}
+                           disabled={discountApplied}
+                           placeholder="ENTER CODE"
+                           className="w-full bg-black border border-gray-600 p-2 text-white text-sm"
+                        />
+                     </div>
+                     <button onClick={applyPromo} disabled={discountApplied} className="bg-gray-800 text-white px-4 py-2 text-sm border border-gray-600 hover:border-hacker-green hover:text-hacker-green">APPLY</button>
+                     <button onClick={() => setShowHackGame(true)} disabled={discountApplied} className="bg-hacker-red text-white px-4 py-2 text-sm font-bold animate-pulse hover:bg-red-700 flex items-center gap-1">
+                        <Zap size={14}/> HACK FOR DISCOUNT
+                     </button>
                  </div>
               </div>
 
@@ -725,7 +1051,7 @@
                  </div>
               </div>
 
-              <form onSubmit={completeOrder} className="space-y-6">
+              <form onSubmit={(e) => completeOrder(e, currentPrice)} className="space-y-6">
                  <h3 className="text-hacker-green uppercase tracking-widest border-b border-gray-800 pb-2">2. Verify Identity</h3>
                  
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -804,7 +1130,7 @@
         );
       };
 
-      const SuccessView = ({ goHome }) => (
+      const SuccessView = ({ goHome, enabledSound }) => (
         <div className="flex items-center justify-center min-h-[60vh] animate-fadeIn">
           <div className="text-center max-w-lg bg-black/90 border border-hacker-green p-12 shadow-[0_0_50px_rgba(0,255,0,0.2)]">
             <div className="flex justify-center mb-6">
@@ -824,7 +1150,7 @@
             </p>
             
             <button 
-              onClick={goHome}
+              onClick={() => { goHome(); playSound('click', enabledSound); }}
               className="border border-hacker-green text-hacker-green hover:bg-hacker-green hover:text-black px-8 py-3 uppercase tracking-widest transition-all font-bold"
             >
               RETURN TO STORE
@@ -842,13 +1168,17 @@
         const [items, setItems] = useState([]);
         const [selectedItem, setSelectedItem] = useState(null);
         
+        // Settings
+        const [enabledSound, setEnabledSound] = useState(false);
+        const [themeColor, setThemeColor] = useState('#0f0');
+
         // Checkout Form State
         const [email, setEmail] = useState('');
         const [insta, setInsta] = useState('');
         const [file, setFile] = useState(null);
         const [isSubmitting, setIsSubmitting] = useState(false);
 
-        // Security Scripts
+        // Security Scripts & Theme
         useEffect(() => {
            // Prevent Right Click
            const handleContextMenu = (e) => e.preventDefault();
@@ -867,16 +1197,15 @@
            };
            document.addEventListener('keydown', handleKeyDown);
 
-           // Console Warning
-           console.clear();
-           console.log("%cSTOP!", "color: red; font-size: 50px; font-weight: bold; -webkit-text-stroke: 1px black;");
-           console.log("%cThis is a protected area. Access to developer tools is restricted and your IP has been logged.", "color: white; font-size: 16px;");
-
            return () => {
               document.removeEventListener('contextmenu', handleContextMenu);
               document.removeEventListener('keydown', handleKeyDown);
            };
         }, []);
+
+        useEffect(() => {
+           document.documentElement.style.setProperty('--theme-color', themeColor);
+        }, [themeColor]);
 
         useEffect(() => {
           setItems(MOCK_DATA.filter(item => item.type === activeTab));
@@ -898,25 +1227,21 @@
           window.scrollTo(0, 0);
         };
 
-        // NEW: Start Checkout Process with Captcha
         const startCheckout = () => {
           setView('CAPTCHA');
           window.scrollTo(0, 0);
         };
 
         const completeCaptcha = () => {
+          playSound('access', enabledSound);
           setView('CHECKOUT');
         };
 
-        const goToCheckout = () => {
-          setView('CHECKOUT');
-          window.scrollTo(0, 0);
-        };
-
-        const completeOrder = async (e) => {
+        const completeOrder = async (e, finalPrice) => {
           e.preventDefault();
           if(!email || !insta || !file) {
             alert("ERROR: MISSING REQUIRED DATA FIELDS.");
+            playSound('error', enabledSound);
             return;
           }
 
@@ -930,7 +1255,7 @@
 ⚠️ <b>NEW ORDER ALERT</b> ⚠️
 --------------------------------
 🛒 <b>Product:</b> ${selectedItem?.name}
-💰 <b>Price:</b> ${selectedItem?.price}
+💰 <b>Price:</b> ${finalPrice}
 --------------------------------
 📧 <b>Email:</b> ${email}
 👤 <b>User:</b> ${insta}
@@ -950,9 +1275,11 @@
              });
 
              if (response.ok) {
+                playSound('access', enabledSound);
                 setView('SUCCESS');
                 window.scrollTo(0, 0);
              } else {
+                playSound('error', enabledSound);
                 const errorData = await response.json();
                 console.error("Telegram Error:", errorData);
                 alert("ERROR: CONNECTION FAILED. PLEASE RETRY OR CONTACT ADMIN.");
@@ -967,6 +1294,7 @@
 
         const copyToClipboard = (text, type) => {
           navigator.clipboard.writeText(text);
+          playSound('click', enabledSound);
           alert(`${type} Address Copied to Clipboard`);
         };
 
@@ -977,55 +1305,71 @@
             {!verified ? (
                <SecurityCheck onVerified={() => setVerified(true)} />
             ) : (
-              <div className="relative z-10 max-w-6xl mx-auto px-4 py-8">
-                {view === 'HOME' && (
-                  <HomeView 
-                    items={items} 
-                    activeTab={activeTab} 
-                    setActiveTab={setActiveTab} 
-                    openProduct={openProduct} 
-                  />
-                )}
-                {view === 'DETAIL' && (
-                  <DetailView 
-                    selectedItem={selectedItem} 
-                    goHome={goHome} 
-                    startCheckout={startCheckout} 
-                  />
-                )}
-                {view === 'CAPTCHA' && (
-                  <CaptchaView onVerified={completeCaptcha} />
-                )}
-                {view === 'CHECKOUT' && (
-                  <CheckoutView 
-                    selectedItem={selectedItem}
-                    email={email}
-                    setEmail={setEmail}
-                    insta={insta}
-                    setInsta={setInsta}
-                    file={file}
-                    setFile={setFile}
-                    completeOrder={completeOrder}
-                    copyToClipboard={copyToClipboard}
-                    setView={setView}
-                    isSubmitting={isSubmitting}
-                  />
-                )}
-                {view === 'SUCCESS' && (
-                  <SuccessView goHome={goHome} />
-                )}
-                
-                <footer className="text-center text-gray-600 text-xs border-t border-gray-900 pt-8 pb-4 font-mono mt-12">
-                  <p className="mb-2">ANONYMOUS ACCESS ONLY. IP LOGGING DISABLED.</p>
-                  <p className="text-gray-800">
-                    DISCLAIMER: This is a website theme ("Illegal Store") for design purposes only. 
-                    No actual illegal content is hosted here. All files are simulated.
-                  </p>
-                  <p className="mt-4">
-                    <span className="text-hacker-red">ERROR 404:</span> SYSTEM IDENTIFICATION FAILED
-                  </p>
-                </footer>
-              </div>
+              <>
+                 <LiveLogs />
+                 <PurchaseToast />
+                 
+                 {/* SETTINGS BAR */}
+                 <div className="fixed top-4 right-4 z-50 flex gap-4 bg-black/50 p-2 rounded backdrop-blur">
+                     <button onClick={() => setEnabledSound(!enabledSound)} className="hover:text-white transition-colors">
+                        {enabledSound ? <Volume2 size={20}/> : <VolumeX size={20}/>}
+                     </button>
+                     <ThemeSwitcher setTheme={setThemeColor} />
+                 </div>
+
+                 <div className="relative z-10 max-w-6xl mx-auto px-4 py-8">
+                   {view === 'HOME' && (
+                     <HomeView 
+                       items={items} 
+                       activeTab={activeTab} 
+                       setActiveTab={setActiveTab} 
+                       openProduct={openProduct}
+                       enabledSound={enabledSound}
+                     />
+                   )}
+                   {view === 'DETAIL' && (
+                     <DetailView 
+                       selectedItem={selectedItem} 
+                       goHome={goHome} 
+                       startCheckout={startCheckout}
+                       enabledSound={enabledSound}
+                     />
+                   )}
+                   {view === 'CAPTCHA' && (
+                     <CaptchaView onVerified={completeCaptcha} />
+                   )}
+                   {view === 'CHECKOUT' && (
+                     <CheckoutView 
+                       selectedItem={selectedItem}
+                       email={email}
+                       setEmail={setEmail}
+                       insta={insta}
+                       setInsta={setInsta}
+                       file={file}
+                       setFile={setFile}
+                       completeOrder={completeOrder}
+                       copyToClipboard={copyToClipboard}
+                       setView={setView}
+                       isSubmitting={isSubmitting}
+                       enabledSound={enabledSound}
+                     />
+                   )}
+                   {view === 'SUCCESS' && (
+                     <SuccessView goHome={goHome} enabledSound={enabledSound} />
+                   )}
+                   
+                   <footer className="text-center text-gray-600 text-xs border-t border-gray-900 pt-8 pb-4 font-mono mt-12">
+                     <p className="mb-2">ANONYMOUS ACCESS ONLY. IP LOGGING DISABLED.</p>
+                     <p className="text-gray-800">
+                       DISCLAIMER: This is a website theme ("Illegal Store") for design purposes only. 
+                       No actual illegal content is hosted here. All files are simulated.
+                     </p>
+                     <p className="mt-4">
+                       <span className="text-hacker-red">ERROR 404:</span> SYSTEM IDENTIFICATION FAILED
+                     </p>
+                   </footer>
+                 </div>
+              </>
             )}
           </div>
         );
